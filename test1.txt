@@ -1,0 +1,24 @@
+addi $t4 $t4 25
+addi $t5 $zero 50
+addi $t0 $zero 24
+addi $t1 $t1 50
+sw $s0 0($s0)
+add $t6 $t4 $t5
+add $t6 $t4 $t0
+add $t6 $t4 $t5
+add $t6 $t4 $t5
+add $t6 $t4 $t5
+add $t6 $t4 $t5
+add $t6 $t4 $t5
+add $t6 $t4 $t5
+add $t6 $t4 $t5
+add $t6 $t4 $t5
+add $t6 $t4 $t5
+add $t6 $t4 $t5
+add $t6 $t4 $t5
+add $t6 $t4 $t5
+add $t6 $t4 $t5
+lw $t2 0($t0)
+add $t6 $t4 $t2
+exit:
+    add $t10 $t0 $t1
