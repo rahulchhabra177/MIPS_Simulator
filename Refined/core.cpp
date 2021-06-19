@@ -403,7 +403,33 @@ int Core::sw(vector<string> tokens,int lineno,int ins_size, int abs_lineno, int 
     
     return 0;
 }
-
+void Core::queue_func(vector<vector<string>>tokens,map<string,int>labels,int safe,int button)
+{
+    //cout<<"size "<<mrm->queue_op.size()<<"\n";
+    int size = mrm->queue_op.size();
+    //cout<<"mrm size "<<size<<"\n";
+    for(int i = 0;i<size;i++){
+        //cout<<"loop "<<safe<<"\n";
+        if(lineno==ins_size||safe==-1){
+            if(button == -1){
+                lineno--;
+            }
+            button =0;
+            if(mrm->queue_op.size()!=0){
+                sort(mrm->queue_op.begin(),mrm->queue_op.end(),mrm->sortVec);
+                vector<int>curr_fake = mrm->queue_op[0];
+                if(curr_fake[0]==1){
+                    sw(tokens[curr_fake[3]],curr_fake[3],ins_size,lineno,1);
+                }else{
+                    lw(tokens[curr_fake[3]],curr_fake[3],ins_size,lineno,1);
+                }
+            }else{
+                safe = 0;
+                lineno++;
+            }
+        }
+    }
+}
 void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
     
     
@@ -422,6 +448,20 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
         
         
         //Assignment 4 start
+        /*cout<<"ini safe "<<safe<<"\n";
+        /*cout<<"line start\n";
+        for(int i=0;i<tokens[lineno].size();i++){
+            cout<<tokens[lineno][i]<<" ";
+        }
+        cout<<"\n line ends\n";
+        *cout<<"queue start\n";
+        for(int i=0;i<mrm->queue_op.size();i++){
+            for(int j=0;j<mrm->queue_op[i].size();j++){
+                cout<<mrm->queue_op[i][j]<<" ";
+            }
+            cout<<"\n";
+        }
+        *cout<<"queue ends\n";*/
         if(lineno==ins_size||safe==-1){
            
             if(button ==-1){
@@ -479,7 +519,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                                 lineno++;
                             }
                             else{
-                                lineno--;
+                                queue_func(tokens,labels,safe,button);
                             }
 
                         }
@@ -487,12 +527,13 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                             safe = mrm->checkSafe_op(mrm->queue_op,reg1,reg2,reg3);
                             if(safe==0){
                                 sequence_cycle=mrm->clock_cycle+1;
+                                mrm->clock_cycle++;
                                 regesterFile[reg1] = regesterFile[reg2]+regesterFile[reg3];
                                 repetion[2] = repetion[2]+1;
-                                cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle<<": "<<tokens[lineno][1]<<" = "<<regesterFile[reg1]<<"\n";
+                                cout<<"core:"<<index<<",cycle "<<sequence_cycle<<": "<<tokens[lineno][1]<<" = "<<regesterFile[reg1]<<"\n";
                                 lineno++;
                             }else{
-                                lineno--;
+                                queue_func(tokens,labels,safe,button);
                             }
                         }
                     }
@@ -505,7 +546,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                             cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle<<": "<<tokens[lineno][1]<<" = "<<regesterFile[reg1]<<"\n";
                             lineno++;
                         }else{
-                            lineno--;
+                            queue_func(tokens,labels,safe,button);
                         }
                     }
                 }
@@ -535,19 +576,20 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                                 cout<<"core:"<<index<<",cycle "<<sequence_cycle<<": "<<tokens[lineno][1]<<" = "<<regesterFile[reg1]<<"\n";
                                 lineno++;
                             }else{
-                                lineno--;
+                                queue_func(tokens,labels,safe,button);
                             }
 
                         }else{
                             safe = mrm->checkSafe_op(mrm->queue_op,reg1,reg2,reg3);
                             if(safe==0){
                                 sequence_cycle=mrm->clock_cycle+1;
+                                mrm->clock_cycle++;
                                 regesterFile[reg1] = regesterFile[reg2]-regesterFile[reg3];
                                 repetion[2] = repetion[2]+1;
-                                cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle<<": "<<tokens[lineno][1]<<" = "<<regesterFile[reg1]<<"\n";
+                                cout<<"core:"<<index<<",cycle "<<sequence_cycle<<": "<<tokens[lineno][1]<<" = "<<regesterFile[reg1]<<"\n";
                                 lineno++;
                             }else{
-                                lineno--;
+                                queue_func(tokens,labels,safe,button);
                             }
                         }
                     }else{
@@ -559,7 +601,8 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                             cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle<<": "<<tokens[lineno][1]<<" = "<<regesterFile[reg1]<<"\n";
                             lineno++;
                         }else{
-                            lineno--;
+                            queue_func(tokens,labels,safe,button);
+                            
                         }
                     }
                 }
@@ -580,10 +623,13 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                         cerr<<"Error\n";
                         return;
                     }
+                    //cout<<"ini line no. "<<lineno<<"\n";
                     if(sequence_cycle<mrm->clock_cycle){
                         bool safe_op = isSafeOp(reg1,reg2,reg3);
+                        //cout<<"curr safe "<<safe_op<<"\n";
                         if(safe_op == true){
                             safe = mrm->checkSafe_op(mrm->queue_op,reg1,reg2,reg3);
+                            //cout<<"second safe "<<safe<<"\n";
                             if(safe==0){
                                 sequence_cycle++;
                                 regesterFile[reg1] = regesterFile[reg2]*regesterFile[reg3];
@@ -591,19 +637,22 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                                 cout<<"core:"<<index<<",cycle "<<sequence_cycle<<": "<<tokens[lineno][1]<<" = "<<regesterFile[reg1]<<"\n";
                                 lineno++;
                             }else{
-                                lineno--;
+                                queue_func(tokens,labels,safe,button);
+
                             }
 
                         }else{
                             safe = mrm->checkSafe_op(mrm->queue_op,reg1,reg2,reg3);
                             if(safe==0){
                                 sequence_cycle=mrm->clock_cycle+1;
+                                mrm->clock_cycle++;
                                 regesterFile[reg1] = regesterFile[reg2]*regesterFile[reg3];
                                 repetion[2] = repetion[2]+1;
-                                cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle<<": "<<tokens[lineno][1]<<" = "<<regesterFile[reg1]<<"\n";
+                                cout<<"core:"<<index<<",cycle "<<sequence_cycle<<": "<<tokens[lineno][1]<<" = "<<regesterFile[reg1]<<"\n";
                                 lineno++;
                             }else{
-                                lineno--;
+                                queue_func(tokens,labels,safe,button);
+
                             }
                         }
                     }else{
@@ -615,9 +664,10 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                             cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle<<": "<<tokens[lineno][1]<<" = "<<regesterFile[reg1]<<"\n";
                             lineno++;
                         }else{
-                            lineno--;
+                            queue_func(tokens,labels,safe,button);
                         }
                     }
+                    //cout<<"final line no "<<lineno<<"\n";
                 }
 
             }
@@ -639,17 +689,20 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                                 repetion[3] = repetion[3]+1;
                                 cout<<"core:"<<index<<",cycle "<<sequence_cycle<<": beq:"<<tokens[lineno][3]<<"\n";
                             }else{
-                                lineno--;
+                                queue_func(tokens,labels,safe,button);
+                                
                             }
                         }else{
                             safe = mrm->check_beq_bne(mrm->queue_op,reg1,reg2);
                             if(safe==0){
                                 sequence_cycle=mrm->clock_cycle+1;
+                                mrm->clock_cycle++;
                                 lineno = beq(tokens[lineno],lineno,labels);
                                 repetion[3] = repetion[3]+1;
-                                cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle<<": beq:"<<tokens[lineno][3]<<"\n";
+                                cout<<"core:"<<index<<",cycle "<<sequence_cycle<<": beq:"<<tokens[lineno][3]<<"\n";
                             }else{
-                                lineno--;
+                                queue_func(tokens,labels,safe,button);
+                                
                             }
                         }
                     }else{
@@ -660,7 +713,8 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                             repetion[3] = repetion[3]+1;
                             cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle<<": beq:"<<tokens[lineno][3]<<"\n";
                         }else{
-                            lineno--;
+                            queue_func(tokens,labels,safe,button);
+                        
                         }
                     }
                 }
@@ -686,17 +740,20 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                                 repetion[4] = repetion[4]+1;
                                 cout<<"core:"<<index<<",cycle "<<sequence_cycle<<": bne:"<<toLabel<<"\n";
                             }else{
-                                lineno--;
+                                queue_func(tokens,labels,safe,button);
+                                
                             }
                         }else{
                             if(safe==0){
                                 sequence_cycle =mrm->clock_cycle+1;
+                                mrm->clock_cycle++;
                                 string toLabel = tokens[lineno][3];
                                 lineno = bne(tokens[lineno],lineno,labels);
                                 repetion[4] = repetion[4]+1;
-                                cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle<<": bne:"<<toLabel<<"\n";
+                                cout<<"core:"<<index<<",cycle "<<sequence_cycle<<": bne:"<<toLabel<<"\n";
                             }else{
-                                lineno--;
+                                queue_func(tokens,labels,safe,button);
+                                
                             }
                         }
                     }else{
@@ -707,7 +764,8 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                             repetion[4] = repetion[4]+1;
                             cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle<<": bne:"<<toLabel<<"\n";
                         }else{
-                            lineno--;
+                            queue_func(tokens,labels,safe,button);
+                            
                         }
 
                     }
@@ -740,21 +798,24 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                                     cout<<"core:"<<index<<",cycle "<<sequence_cycle<<": "<<tokens[lineno][1]<<" = "<<regesterFile[r0]<<"\n";
                                     lineno++;
                                 }else{
-                                    lineno--;
+                                    queue_func(tokens,labels,safe,button);
+                                    
                                 }
                             }else{
                                 safe = mrm->checkSafe_op(mrm->queue_op,r0,r1,r2);
                                 if(safe==0){
                                     sequence_cycle=mrm->clock_cycle+1;
+                                    mrm->clock_cycle++;
                                     if(regesterFile[(r1)]<regesterFile[(r2)]){
                                         regesterFile[(r0)]= 1;
                                     }else{
                                         regesterFile[(r0)] =0;
                                     }
-                                    cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle<<": "<<tokens[lineno][1]<<" = "<<regesterFile[r0]<<"\n";
+                                    cout<<"core:"<<index<<",cycle "<<sequence_cycle<<": "<<tokens[lineno][1]<<" = "<<regesterFile[r0]<<"\n";
                                     lineno++;
                                 }else{
-                                    lineno--;
+                                    queue_func(tokens,labels,safe,button);
+                                    
                                 }
                             }
                         }else{
@@ -769,7 +830,8 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                                 cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle<<": "<<tokens[lineno][1]<<" = "<<regesterFile[r0]<<"\n";
                                 lineno++;
                             }else{
-                                lineno--;
+                                queue_func(tokens,labels,safe,button);
+                                
                             }
                         }
                     }else{
@@ -789,21 +851,24 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                                     cout<<"core:"<<index<<",cycle "<<sequence_cycle<<": "<<tokens[lineno][1]<<" = "<<regesterFile[r0]<<"\n";
                                     lineno++;
                                 }else{
-                                    lineno--;
+                                    queue_func(tokens,labels,safe,button);
+                                    
                                 }
                             }else{
                                 safe=  mrm->checkSafe_addi(mrm->queue_op,r0,r1);
                                 if(safe==0){
                                     sequence_cycle = mrm->clock_cycle+1;
+                                    mrm->clock_cycle++;
                                     if(regesterFile[r1]<(r2)){
                                         regesterFile[r0]= 1;
                                     }else{
                                         regesterFile[(r0)] =0;
                                     }
-                                    cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle<<": "<<tokens[lineno][1]<<" = "<<regesterFile[r0]<<"\n";
+                                    cout<<"core:"<<index<<",cycle "<<sequence_cycle<<": "<<tokens[lineno][1]<<" = "<<regesterFile[r0]<<"\n";
                                     lineno++;
                                 }else{
-                                    lineno--;
+                                    queue_func(tokens,labels,safe,button);
+                                    
                                 }
                             }
                         }else{
@@ -818,7 +883,8 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                                 cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle<<": "<<tokens[lineno][1]<<" = "<<regesterFile[r0]<<"\n";
                                 lineno++;
                             }else{
-                                lineno--;
+                                queue_func(tokens,labels,safe,button);
+                                
                             }
                         }
                         
@@ -933,18 +999,21 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                                 cout<<"core:"<<index<<",cycle "<<sequence_cycle<<": "<<tokens[lineno][1]<<"="<<r1<<"\n";
                                 lineno++;
                             }else if(safe==-1){
-                                lineno--;
+                                queue_func(tokens,labels,safe,button);
+                                
                             }
                         }else{
                             if(safe==0){
                                 sequence_cycle=mrm->clock_cycle+1;
+                                mrm->clock_cycle++;
                                 int r1 = regesterFile[reg2]+stoi(immi);
                                 regesterFile[reg1] = r1;
                                 repetion[9] = repetion[9]+1;
-                                cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle<<": "<<tokens[lineno][1]<<"="<<r1<<"\n";
+                                cout<<"core:"<<index<<",cycle "<<sequence_cycle<<": "<<tokens[lineno][1]<<"="<<r1<<"\n";
                                 lineno++;
                             }else if(safe==-1){
-                                lineno--;
+                                queue_func(tokens,labels,safe,button);
+                                
                             }
                         }
                     }else{
@@ -957,7 +1026,8 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                             cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle<<": "<<tokens[lineno][1]<<"="<<r1<<"\n";
                             lineno++;
                         }else if(safe==-1){
-                            lineno--;
+                            queue_func(tokens,labels,safe,button);
+                            
                         }
                     }
                 }
@@ -970,7 +1040,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
         }
 
     }
-    if(mrm->rowbuffer!=-1){
+    if(mrm->rowbuffer!=-1&&lineno==tokens.size()&&mrm->queue_op.size()==0){
         cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle+1<<"-";
         mrm->clock_cycle+=rowdelay;
         mrm->rowbuffer=-1;

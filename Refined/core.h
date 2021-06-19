@@ -27,6 +27,7 @@ class Core{
 		int rownumber(string s);
 		int colnumber(string s);
 		void parse_next();
+		void queue_func(vector<vector<string>>tokens,map<string,int>labels,int safe,int button);
 		bool isCompleted=false;
 		bool isSafeOp(int reg1,int reg2,int reg3);
 		bool isSafe_beq_bne(int reg1,int reg2);
