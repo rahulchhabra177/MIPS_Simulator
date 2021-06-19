@@ -57,6 +57,31 @@ int Core::convertRegisters(string s){
         }
     }      
 }
+
+int Core::getBankNum(int address){
+
+    int BankSize=1024*256;
+    if (address<BankSize){
+        return 0;
+    }
+    else if (address>=BankSize && address<BankSize*2){
+        return 1;
+    }
+    else if (address>=BankSize*2 && address<BankSize*3){
+        return 2;
+    }
+    else if (address<BankSize<4){
+        return 3;
+    }
+    else{
+        return -1;
+    }
+
+
+
+}
+
+
 int Core::addressnew(string s){
     string const parenl = {"("};
     string const parenr = {")"};
@@ -281,14 +306,15 @@ int Core::lw(vector<string> tokens,int lineno,int ins_size,int abs_lineno,int ch
     //Assignment 4 start
     int row_reg = row_regester(tokens[2]);
     vector<int>current_op;
-    current_op.resize(6,0);
+    current_op.resize(7,0);
     current_op[0] = 0;
     current_op[1] = r0;
     current_op[2] = address;
     current_op[3] = lineno;
     current_op[4] = address/1024;
     current_op[5] = row_reg;
-    int aq = mrm->Mem_Req_Order(mrm->rowbuffer,mrm->queue_op,current_op,abs_lineno,ins_size, change);
+    current_op[6] = 1;
+    int aq = mrm->Mem_Req_Order(mrm->rowbuffer[getBankNum(address)],mrm->queue_op,current_op,abs_lineno,ins_size, change);
     //cout<<"lw:"<<aq<<"\n";
     if(aq==-1){
         mrm->clock_cycle++;
@@ -296,7 +322,7 @@ int Core::lw(vector<string> tokens,int lineno,int ins_size,int abs_lineno,int ch
 
         cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle+1<<"-";
         mrm->clock_cycle+=rowdelay;
-        mrm->rowbuffer = rowb;
+        mrm->rowbuffer[getBankNum(address)] = rowb;
         mrm->clock_cycle+=coldelay;
         regesterFile[r0] = mrm->dram[row+col];
         mrm->rowbufferUpdate[0]+=1;
@@ -320,7 +346,7 @@ int Core::lw(vector<string> tokens,int lineno,int ins_size,int abs_lineno,int ch
 
         cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle+1<<"-";
         mrm->clock_cycle+=2*rowdelay;
-        mrm->rowbuffer=rowb;
+        mrm->rowbuffer[getBankNum(address)]=rowb;
         mrm->clock_cycle+=coldelay;
         regesterFile[r0] = mrm->dram[row+col];
         mrm->rowbufferUpdate[0]+=2;
@@ -348,14 +374,15 @@ int Core::sw(vector<string> tokens,int lineno,int ins_size, int abs_lineno, int 
     //Assignment 4 start
     int row_reg = row_regester(tokens[2]);
     vector<int> current_op;
-    current_op.resize(6,0);
+    current_op.resize(7,0);
     current_op[0] = 1;
     current_op[1] = r0;
     current_op[2] = address;
     current_op[3] = lineno;
     current_op[4] = address/1024;
     current_op[5] = row_reg;
-    int aq = mrm->Mem_Req_Order(mrm->rowbuffer,mrm->queue_op,current_op,abs_lineno,ins_size, change);
+    current_op[6] = 1;
+    int aq = mrm->Mem_Req_Order(mrm->rowbuffer[getBankNum(address)],mrm->queue_op,current_op,abs_lineno,ins_size, change);
     //cout<<"sw:"<<aq<<"\n";
     if(aq==-1){
         mrm->clock_cycle++;
@@ -363,7 +390,7 @@ int Core::sw(vector<string> tokens,int lineno,int ins_size, int abs_lineno, int 
 
         cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle+1<<"-";
         mrm->clock_cycle+=rowdelay;
-        mrm->rowbuffer = rowb;
+        mrm->rowbuffer[getBankNum(address)] = rowb;
         mrm->clock_cycle+=coldelay;
         mrm->dram[row+col] = regesterFile[r0];
         cout<<mrm->clock_cycle<<": memory address "<<memup<<" = "<<mrm->memoryupdate[memup]<<"\n";
@@ -388,7 +415,7 @@ int Core::sw(vector<string> tokens,int lineno,int ins_size, int abs_lineno, int 
 
         cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle+1<<"-";
         mrm->clock_cycle+=2*rowdelay;
-        mrm->rowbuffer=rowb;
+        mrm->rowbuffer[getBankNum(address)]=rowb;
         mrm->clock_cycle+=coldelay;
         mrm->dram[row+col] = regesterFile[r0];
         mrm->rowbufferUpdate[0]+=2;
@@ -417,7 +444,14 @@ void Core::queue_func(vector<vector<string>>tokens,map<string,int>labels,int saf
             button =0;
             if(mrm->queue_op.size()!=0){
                 sort(mrm->queue_op.begin(),mrm->queue_op.end(),mrm->sortVec);
+
                 vector<int>curr_fake = mrm->queue_op[0];
+                while (!mrm->queue_op.empty() && curr_fake[6]==0){
+                    cout<<"Element popped\n";
+                    curr_fake = mrm->queue_op[0];
+                    mrm->queue_op.erase(mrm->queue_op.begin());
+                }
+
                 if(curr_fake[0]==1){
                     sw(tokens[curr_fake[3]],curr_fake[3],ins_size,lineno,1);
                 }else{
@@ -432,7 +466,7 @@ void Core::queue_func(vector<vector<string>>tokens,map<string,int>labels,int saf
 }
 void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
     
-    
+    // cout<<"core:"<<index<<":"<<mrm->clock_cycle<<":"<<(int)isCompleted<<"\n";
     int safe =0;
     int button =0;
     if (lineno>tokens.size()){isCompleted=true;}
@@ -510,7 +544,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                     if(sequence_cycle<mrm->clock_cycle){
                         bool safe_op = isSafeOp(reg1,reg2,reg3);
                         if(safe_op == true){
-                            safe = mrm->checkSafe_op(mrm->queue_op,reg1,reg2,reg3);
+                            safe = mrm->checkSafe_op(reg1,reg2,reg3);
                             if(safe==0){
                                 sequence_cycle++;
                                 regesterFile[reg1] = regesterFile[reg2]+regesterFile[reg3];
@@ -524,7 +558,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
 
                         }
                         else{
-                            safe = mrm->checkSafe_op(mrm->queue_op,reg1,reg2,reg3);
+                            safe = mrm->checkSafe_op(reg1,reg2,reg3);
                             if(safe==0){
                                 sequence_cycle=mrm->clock_cycle+1;
                                 mrm->clock_cycle++;
@@ -538,7 +572,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                         }
                     }
                     else{
-                        safe = mrm->checkSafe_op(mrm->queue_op,reg1,reg2,reg3);
+                        safe = mrm->checkSafe_op(reg1,reg2,reg3);
                         if(safe==0){
                             mrm->clock_cycle++;sequence_cycle++;
                             regesterFile[reg1] = regesterFile[reg2]+regesterFile[reg3];
@@ -568,7 +602,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                     if(sequence_cycle<mrm->clock_cycle){
                         bool safe_op = isSafeOp(reg1,reg2,reg3);
                         if(safe_op == true){
-                            safe = mrm->checkSafe_op(mrm->queue_op,reg1,reg2,reg3);
+                            safe = mrm->checkSafe_op(reg1,reg2,reg3);
                             if(safe==0){
                                 sequence_cycle++;
                                 regesterFile[reg1] = regesterFile[reg2]-regesterFile[reg3];
@@ -580,7 +614,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                             }
 
                         }else{
-                            safe = mrm->checkSafe_op(mrm->queue_op,reg1,reg2,reg3);
+                            safe = mrm->checkSafe_op(reg1,reg2,reg3);
                             if(safe==0){
                                 sequence_cycle=mrm->clock_cycle+1;
                                 mrm->clock_cycle++;
@@ -593,7 +627,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                             }
                         }
                     }else{
-                        safe = mrm->checkSafe_op(mrm->queue_op,reg1,reg2,reg3);
+                        safe = mrm->checkSafe_op(reg1,reg2,reg3);
                         if(safe==0){
                             mrm->clock_cycle++;sequence_cycle++;
                             regesterFile[reg1] = regesterFile[reg2]-regesterFile[reg3];
@@ -628,7 +662,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                         bool safe_op = isSafeOp(reg1,reg2,reg3);
                         //cout<<"curr safe "<<safe_op<<"\n";
                         if(safe_op == true){
-                            safe = mrm->checkSafe_op(mrm->queue_op,reg1,reg2,reg3);
+                            safe = mrm->checkSafe_op(reg1,reg2,reg3);
                             //cout<<"second safe "<<safe<<"\n";
                             if(safe==0){
                                 sequence_cycle++;
@@ -642,7 +676,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                             }
 
                         }else{
-                            safe = mrm->checkSafe_op(mrm->queue_op,reg1,reg2,reg3);
+                            safe = mrm->checkSafe_op(reg1,reg2,reg3);
                             if(safe==0){
                                 sequence_cycle=mrm->clock_cycle+1;
                                 mrm->clock_cycle++;
@@ -656,7 +690,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                             }
                         }
                     }else{
-                        safe = mrm->checkSafe_op(mrm->queue_op,reg1,reg2,reg3);
+                        safe = mrm->checkSafe_op(reg1,reg2,reg3);
                         if(safe==0){
                             mrm->clock_cycle++;sequence_cycle++;
                             regesterFile[reg1] = regesterFile[reg2]*regesterFile[reg3];
@@ -682,7 +716,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                     if(sequence_cycle<mrm->clock_cycle){
                         bool safe_op = isSafe_beq_bne(reg1,reg2);
                         if(safe_op==true){
-                            safe = mrm->check_beq_bne(mrm->queue_op,reg1,reg2);
+                            safe = mrm->check_beq_bne(reg1,reg2);
                             if(safe==0){
                                 sequence_cycle++;
                                 lineno = beq(tokens[lineno],lineno,labels);
@@ -693,7 +727,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                                 
                             }
                         }else{
-                            safe = mrm->check_beq_bne(mrm->queue_op,reg1,reg2);
+                            safe = mrm->check_beq_bne(reg1,reg2);
                             if(safe==0){
                                 sequence_cycle=mrm->clock_cycle+1;
                                 mrm->clock_cycle++;
@@ -706,7 +740,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                             }
                         }
                     }else{
-                        safe = mrm->check_beq_bne(mrm->queue_op,reg1,reg2);
+                        safe = mrm->check_beq_bne(reg1,reg2);
                         if(safe==0){
                             mrm->clock_cycle++;sequence_cycle++;
                             lineno = beq(tokens[lineno],lineno,labels);
@@ -729,7 +763,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                     button =0;
                     int reg1 = convertRegisters(tokens[lineno][1]);
                     int reg2 = convertRegisters(tokens[lineno][2]);
-                    safe = mrm->check_beq_bne(mrm->queue_op,reg1,reg2);
+                    safe = mrm->check_beq_bne(reg1,reg2);
                     if(sequence_cycle<mrm->clock_cycle){
                         bool safe_op = isSafe_beq_bne(reg1,reg2);
                         if(safe_op==true){
@@ -787,7 +821,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                         if(sequence_cycle<mrm->clock_cycle){
                             bool safe_op = isSafeOp(r0,r1,r2);
                             if(safe_op==true){
-                                safe = mrm->checkSafe_op(mrm->queue_op,r0,r1,r2);
+                                safe = mrm->checkSafe_op(r0,r1,r2);
                                 if(safe==0){
                                     sequence_cycle++;
                                     if(regesterFile[(r1)]<regesterFile[(r2)]){
@@ -802,7 +836,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                                     
                                 }
                             }else{
-                                safe = mrm->checkSafe_op(mrm->queue_op,r0,r1,r2);
+                                safe = mrm->checkSafe_op(r0,r1,r2);
                                 if(safe==0){
                                     sequence_cycle=mrm->clock_cycle+1;
                                     mrm->clock_cycle++;
@@ -819,7 +853,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                                 }
                             }
                         }else{
-                            safe = mrm->checkSafe_op(mrm->queue_op,r0,r1,r2);
+                            safe = mrm->checkSafe_op(r0,r1,r2);
                             if(safe==0){
                                 mrm->clock_cycle++;sequence_cycle++;
                                 if(regesterFile[(r1)]<regesterFile[(r2)]){
@@ -840,7 +874,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                         if(sequence_cycle<mrm->clock_cycle){
                             bool safe_op = isSafeAddi(r0,r1);
                             if(safe_op==true){
-                                safe=  mrm->checkSafe_addi(mrm->queue_op,r0,r1);
+                                safe=  mrm->checkSafe_addi(r0,r1);
                                 if(safe==0){
                                     sequence_cycle++;
                                     if(regesterFile[r1]<(r2)){
@@ -855,7 +889,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                                     
                                 }
                             }else{
-                                safe=  mrm->checkSafe_addi(mrm->queue_op,r0,r1);
+                                safe=  mrm->checkSafe_addi(r0,r1);
                                 if(safe==0){
                                     sequence_cycle = mrm->clock_cycle+1;
                                     mrm->clock_cycle++;
@@ -872,7 +906,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                                 }
                             }
                         }else{
-                            safe=  mrm->checkSafe_addi(mrm->queue_op,r0,r1);
+                            safe=  mrm->checkSafe_addi(r0,r1);
                             if(safe==0){
                                 mrm->clock_cycle++;sequence_cycle++;
                                 if(regesterFile[r1]<(r2)){
@@ -923,7 +957,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                         cerr<<"Syntax Error.\n";
                         return;
                     }
-                    safe = mrm->check_sw_lw(mrm->queue_op,reg1,reg2);
+                    safe = mrm->check_sw_lw(reg1,reg2,rownumber(tokens[lineno][2])+colnumber(tokens[lineno][2]),0);
                     if(safe==0){
                         int ans = lw(tokens[lineno],lineno,ins_size,lineno,0);
                         if(ans==-1){
@@ -933,7 +967,13 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                         }
                         repetion[7] = repetion[7]+1;
                         lineno++;
-                    }else{
+                    }
+                    else if (safe==-2){
+                        regesterFile[reg1]=regesterFile[mrm->stored_value];
+                        cout<<" : Value directly taken from sw process "<<""<<"="<<regesterFile[mrm->stored_value]<<"\n";
+                        lineno++;
+                    }
+                    else{
                         lineno--;
                     }
 
@@ -954,7 +994,9 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                         cerr<<"Syntax Error.\n";
                         return;
                     }
-                    safe = mrm->check_sw_lw(mrm->queue_op,reg1,reg2);
+                    safe = mrm->check_sw_lw(reg1,reg2,rownumber(tokens[lineno][2])+colnumber(tokens[lineno][2]),1);
+                    
+
                     if(safe==0){
                         int ans = sw(tokens[lineno],lineno,ins_size,lineno,0);
                         if(ans==-1){
@@ -964,7 +1006,9 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                         }
                         repetion[8] = repetion[8]+1;
                         lineno++;
-                    }else{
+                    }
+
+                    else{
                         lineno--;
                     }
 
@@ -1017,7 +1061,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                             }
                         }
                     }else{
-                        safe = mrm->checkSafe_addi(mrm->queue_op,reg1,reg2);
+                        safe = mrm->checkSafe_addi(reg1,reg2);
                         if(safe==0){
                             mrm->clock_cycle++;sequence_cycle++;
                             int r1 = regesterFile[reg2]+stoi(immi);
@@ -1040,10 +1084,10 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
         }
 
     }
-    if(mrm->rowbuffer!=-1&&lineno==tokens.size()&&mrm->queue_op.size()==0){
+    if(mrm->rowbuffer[0]!=-1 &&lineno==tokens.size() && mrm->queue_op.size()==0){
         cout<<"core:"<<index<<",cycle "<<mrm->clock_cycle+1<<"-";
         mrm->clock_cycle+=rowdelay;
-        mrm->rowbuffer=-1;
+        mrm->rowbuffer[0]=-1;
         cout<<mrm->clock_cycle<<" :DRAM Writeback row\n";
     }
 }
@@ -1052,7 +1096,7 @@ void Core::parse_next(){
     parse(instruction_memory,labels);
 }
 
-Core::Core(string fileName, int idx, int rDelay , int cDelay){
+Core::Core(string fileName, int idx, int rDelay , int cDelay, MRM* mrm_universal){
     vector<string>identi;
     identi.push_back("add");
     identi.push_back("sub");
@@ -1067,7 +1111,7 @@ Core::Core(string fileName, int idx, int rDelay , int cDelay){
     index=idx;
     vector<string>labelstr;
     regesterFile.resize(32,0);
-    mrm=new MRM(rDelay,cDelay);
+    mrm=mrm_universal;
     repetion.resize(10,0);
     rowdelay = rDelay ;
     coldelay = cDelay;
