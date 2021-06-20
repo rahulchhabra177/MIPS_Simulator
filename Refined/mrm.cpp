@@ -131,20 +131,22 @@ int MRM::check_sw_lw(int r1,int r2,int address,int cur_ins,vector<int>banks,int 
             vector<int>row = queue_op[j][i];
             if(row[7]==index){
                 if(row[0]==0){
-                    if(row[1]==r1 && cur_ins==0){                
+                    /*if(row[1]==r1 && cur_ins==0){                
                         cout<<"MRM cycle no:"<<clock_cycle<<" LW process at line number :"<<row[3]+1<<" removed from queue\n";
                         clock_cycle++;
+                        cout<<"ini "<<queue_op[j].size()<<"\n";
                         queue_op[j].erase(queue_op[j].begin()+i);
+                        cout<<"fin "<<queue_op[j].size()<<"\n";
                         return 0;
-                    }
-                    else if(row[1]==r2){
+                    }*/
+                    if(row[1]==r2){
                         return -1;
                     }
                     else if(row[5]==r1){
                         return -1;
                     }
                 }
-                else{
+                /*else{
                     if (row[2]==address && cur_ins==0){
                         stored_value=row[1];
                         cout<<"MRM Forwarding ,cycle no:"<<clock_cycle;
@@ -160,7 +162,7 @@ int MRM::check_sw_lw(int r1,int r2,int address,int cur_ins,vector<int>banks,int 
                     }
 
 
-                }
+                }*/
             }
         }
     }

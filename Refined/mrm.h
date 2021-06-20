@@ -28,6 +28,8 @@ class MRM{
 		vector<int> rowbuffer;
 		vector<vector<int>>rowbufferBank;
 		int clock_cycle = 0;
+		int clock_arr[4];
+		vector<int> clock_core;
 		int safe=0;
 		vector<int> rowbufferUpdate;
 		int rowdelay,coldelay;
