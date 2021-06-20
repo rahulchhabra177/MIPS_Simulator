@@ -8,6 +8,7 @@ class Core{
     public:
     	vector<int> regesterFile;
     	MRM* mrm=nullptr;
+		int totalCores;
 		int stackpointer;
 		int index;
 		string const alpha = {"abcdefghijklmnopqrstuvwxyz"};
@@ -19,11 +20,13 @@ class Core{
 		int ins_size;
 		vector<vector<string>> instruction_memory;
 		map<string,int>labels;
-		Core(string filename ,int idx, int rDelay , int cDelay , MRM* mrm);
+		Core(string filename ,int idx, int rDelay , int cDelay , MRM* mrm,int total_cores);
         void print_reg(vector<int> regesterFile);
+		vector<int> queueBank(int index);
         int convertRegisters(string s);
         int getBankNum(int address);
         int addressnew(string s);
+		int coreAddress(int address,int index);
         int row_regester(string s);
 		int rownumber(string s);
 		int colnumber(string s);

@@ -5,15 +5,15 @@ using namespace std;
 
 
 
-
 int main(){
 
-	int num_cores=1;
+	int num_cores=2;
 	vector<Core*> cores(num_cores);
 	vector<int> cycles(num_cores);
 	MRM* mrm_universal=new MRM(10,2);
+	mrm_universal->rowbufferBank.resize(4);
 	for (int i=0;i<num_cores;i++){
-		cores[i]=new Core("./Refined/t"+to_string(i+1)+".txt",i+1,10,2,mrm_universal);
+		cores[i]=new Core("./testcases/test"+to_string(i+1)+".txt",i+1,10,2,mrm_universal,num_cores);
 	}
 
 	int num_completed=0;
@@ -36,6 +36,14 @@ int main(){
 
 		}
 
+	}
+	for(int i=0;i<4;i++){
+		if(mrm_universal->rowbuffer[i]!=-1){
+			cout<<"Cycle "<<mrm_universal->clock_cycle+1<<"-";
+			mrm_universal->clock_cycle+=10;
+			mrm_universal->rowbuffer[i] = -1;
+			cout<<mrm_universal->clock_cycle<<" :DRAM Writeback rowbuffer number "<<i+1<<"\n";
+		}
 	}
 
 
