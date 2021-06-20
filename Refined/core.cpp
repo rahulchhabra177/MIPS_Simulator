@@ -492,6 +492,7 @@ void Core::queue_func(vector<vector<string>>tokens,map<string,int>labels,int saf
 void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
     
     // cout<<"core:"<<index<<":"<<mrm->clock_cycle<<":"<<(int)isCompleted<<"\n";
+    vector<int>banks = queueBank(index);
     int safe =0;
     int button =0;
     if (lineno>tokens.size()){isCompleted=true;}
@@ -504,7 +505,6 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
             lineno++;
             button = -1;
         }
-        
         
         //Assignment 4 start
         /*cout<<"ini safe "<<safe<<"\n";
@@ -531,21 +531,26 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
             if(button ==-1){
                 lineno--;
             }
-            button=0;   
-            if(mrm->queue_op[mrm->currBank].size()!=0){
-                
-                sort(mrm->queue_op[mrm->currBank].begin(),mrm->queue_op[mrm->currBank].end(),mrm->sortVec);
-                vector<int> curr_fake = mrm->queue_op[mrm->currBank][0];
-                if(curr_fake[0]==1){
-                    sw(tokens[curr_fake[3]],curr_fake[3],ins_size,lineno,1);
+            button=0;  
+            int loopend = 0;
+            for(int i=0;i<banks.size();i++){ 
+                if(mrm->queue_op[i].size()!=0){
+                    sort(mrm->queue_op[i].begin(),mrm->queue_op[i].end(),mrm->sortVec);
+                    vector<int> curr_fake = mrm->queue_op[i][0];
+                    loopend++;
+                    if(curr_fake[0]==1){
+                        sw(tokens[curr_fake[3]],curr_fake[3],ins_size,lineno,1);
+                    }else{
+
+                        lw(tokens[curr_fake[3]],curr_fake[3],ins_size,lineno,1);
+                    }                
+
+
                 }else{
-
-                    lw(tokens[curr_fake[3]],curr_fake[3],ins_size,lineno,1);
-                }                
-
-
-            }else{
-                safe=0;
+                    safe=0;
+                }
+            }
+            if(loopend==0){
                 lineno++;
             }
 
@@ -571,7 +576,6 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                         cerr<<"Error\n";
                         return;
                     }
-                    vector<int>banks = queueBank(index);
                     if(sequence_cycle<mrm->clock_cycle){
                         bool safe_op = isSafeOp(reg1,reg2,reg3);
                         if(safe_op == true){
@@ -630,7 +634,6 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                         cerr<<"Error\n";
                         return;
                     }
-                    vector<int>banks = queueBank(index);
                     if(sequence_cycle<mrm->clock_cycle){
                         bool safe_op = isSafeOp(reg1,reg2,reg3);
                         if(safe_op == true){
@@ -690,7 +693,6 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                         return;
                     }
                     //cout<<"ini line no. "<<lineno<<"\n";
-                    vector<int>banks = queueBank(index);
                     if(sequence_cycle<mrm->clock_cycle){
                         bool safe_op = isSafeOp(reg1,reg2,reg3);
                         //cout<<"curr safe "<<safe_op<<"\n";
@@ -746,7 +748,6 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                     button =0;
                     int reg1 = convertRegisters(tokens[lineno][1]);
                     int reg2 = convertRegisters(tokens[lineno][2]);
-                    vector<int>banks = queueBank(index);
                     if(sequence_cycle<mrm->clock_cycle){
                         bool safe_op = isSafe_beq_bne(reg1,reg2);
                         if(safe_op==true){
@@ -797,7 +798,6 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                     button =0;
                     int reg1 = convertRegisters(tokens[lineno][1]);
                     int reg2 = convertRegisters(tokens[lineno][2]);
-                    vector<int>banks = queueBank(index);
                     safe = mrm->check_beq_bne(reg1,reg2,banks,index);
                     if(sequence_cycle<mrm->clock_cycle){
                         bool safe_op = isSafe_beq_bne(reg1,reg2);
@@ -851,7 +851,6 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                     int r0 = convertRegisters(tokens[lineno][1]);
                     int r1 = convertRegisters(tokens[lineno][2]);
                     int r2;
-                    vector<int>banks = queueBank(index);
                     if(tokens[lineno][3].at(0)=='$'){
                         r2 = convertRegisters(tokens[lineno][3]);
                         if(sequence_cycle<mrm->clock_cycle){
@@ -985,7 +984,6 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                     cerr<<"Syntax Error.\n";
                     return;
                 }else{
-                    vector<int>banks = queueBank(index);
                     button =0;
                     int reg1 = convertRegisters(tokens[lineno][1]);
                     int reg2 = row_regester(tokens[lineno][2]);
@@ -1024,7 +1022,6 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                     return;
                 }else{
                     button =0;
-                    vector<int>banks = queueBank(index);
                     int reg1 = convertRegisters(tokens[lineno][1]);
                     int reg2 = row_regester(tokens[lineno][2]);
                     if(reg1==-1||reg2==-1){
@@ -1070,7 +1067,6 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                         cerr<<"Error\n";
                         return;
                     }
-                    vector<int>banks = queueBank(index);
                     if(sequence_cycle<mrm->clock_cycle){
                         bool safe_op = isSafeAddi(reg1,reg2);
                         safe = mrm->checkSafe_addi(reg1,reg2,banks,index);

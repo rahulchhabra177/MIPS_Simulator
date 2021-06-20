@@ -1,4 +1,8 @@
         addi $s0 $zero 1000
+        addi $s3 $s3 2500
         addi $s1 $zero 2
-        sw $t0 0($s0)
-        sw $t1 0($s0)
+        sw $s1 0($s0)
+        lw $t1 0($s3)
+        sw $t7 100($s3)
+        add $t2 $t1 $t4
+        lw $t5 0($s0)

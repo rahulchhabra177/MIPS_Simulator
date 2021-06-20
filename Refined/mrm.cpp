@@ -38,19 +38,19 @@ int MRM::checkSafe_op(int r1,int r2,int r3,vector<int>banks,int index){
             if(row[7]==index){
                 if(row[0]==1){
                     if(row[5]==r1){
-                        currBank = i;
+                        currBank = j;
                         return -1;
                     }else if(row[1]==r1){
-                        currBank = i;
+                        currBank = j;
                         return -1;
                     }
                 }
                 else{
                     if(row[5]==r1){
-                        currBank = i;
+                        currBank = j;
                         return -1;
                     }else if(row[1]==r1||row[1]==r2||row[1]==r3){
-                        currBank = i;
+                        currBank = j;
                         return -1;
                     }
                 }
@@ -67,18 +67,18 @@ int MRM::checkSafe_addi(int r1,int r2,vector<int>banks,int index){
             if(row[7]==index){
                 if(row[0]==1){
                     if(row[5]==r1){
-                        currBank = i;
+                        currBank = j;
                         return -1;
                     }else if(row[1]==r1){
-                        currBank = i;
+                        currBank = j;
                         return -1;
                     }
                 }else{
                     if(row[5]==r1){
-                        currBank = i;
+                        currBank = j;
                         return -1;
                     }else if(row[1]==r1||row[1]==r2){
-                        currBank = i;
+                        currBank = j;
                         return -1;
                     }
                 }
@@ -96,7 +96,7 @@ int MRM::check_beq_bne(int r1,int r2,vector<int>banks,int index){
                 if(row[7]==index){
                     if(row[0]==0){
                         if(row[1]==r1){
-                            currBank = i;
+                            currBank = j;
                             return -1;
                         }
                     }
@@ -110,7 +110,7 @@ int MRM::check_beq_bne(int r1,int r2,vector<int>banks,int index){
                 if(row[7]==index){
                     if(row[0]==0){
                         if(row[1]==r1||row[1]==r2){
-                            currBank = i;
+                            currBank = j;
                             return -1;
                         }
                     }
