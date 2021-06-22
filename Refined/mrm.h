@@ -21,7 +21,7 @@ class MRM{
 		int check_beq_bne(int r1,int r2,vector<int>banks,int index);
 		int stored_value=-1;
 		int currBank =-1;
-		int check_sw_lw(int r1,int r2,int address,int cur_ins,vector<int>banks,int index,int clock_cycle);
+		int check_sw_lw(int r1,int r2,int address,int cur_ins,vector<int>banks,int index);
 		map<string,int>memoryupdate;
 		vector<int>dram;
 		vector<curr_process> current;

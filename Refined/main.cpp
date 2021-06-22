@@ -7,7 +7,7 @@ using namespace std;
 
 int main(){
 
-	int num_cores=2;
+	int num_cores=1;
 	int max_clock;
 	vector<Core*> cores(num_cores);
 	vector<int> cycles(num_cores);
