@@ -438,6 +438,7 @@ int sw(vector<string> tokens,int lineno,int ins_size, int abs_lineno, int change
 }
 
 void parse(vector<vector<string>> tokens,map<string,int>labels){
+    cout<<"core:"<<index<<":"<<mrm->clock_cycle<<"\n";
     int lineno = 0;
     int ins_size = tokens.size();
     int safe =0;
