@@ -7,7 +7,8 @@ using namespace std;
 
 int main(){
 
-	int num_cores=1;
+	int num_cores=2;
+	int max_clock;
 	vector<Core*> cores(num_cores);
 	vector<int> cycles(num_cores);
 	MRM* mrm_universal=new MRM(10,2);
@@ -19,7 +20,7 @@ int main(){
 	int num_completed=0;
 	vector<bool> completed(num_cores,false);
 	int debug=0;
-	while (num_cores!=num_completed && debug<700){
+	while (num_cores!=num_completed && debug<400){
 
 		debug++;
 		for (int i=0;i<num_cores;i++){
@@ -38,13 +39,18 @@ int main(){
 		}
 
 	}
-
+	for(int i=1;i<=num_cores;i++){
+		if(mrm_universal->clock_core[i]>max_clock){
+			max_clock = mrm_universal->clock_core[i];
+		}
+	}
+//Writeback
 	for(int i=0;i<4;i++){
 		if(mrm_universal->rowbuffer[i]!=-1){
-			cout<<"Cycle "<<mrm_universal->clock_core[1]+1<<"-";
-			mrm_universal->clock_core[1]+=10;
+			cout<<"Cycle "<<max_clock+1<<"-";
+			max_clock+=10;
 			mrm_universal->rowbuffer[i] = -1;
-			cout<<mrm_universal->clock_core[1]<<" :DRAM Writeback rowbuffer number "<<i+1<<"\n";
+			cout<<max_clock<<" :DRAM Writeback rowbuffer number "<<i+1<<"\n";
 		}
 	}
 
