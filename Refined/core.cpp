@@ -1003,7 +1003,8 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                         return;
                     }
                     int address_sw_lw = coreAddress(rownumber(tokens[lineno][2])+colnumber(tokens[lineno][2]),index);
-                    safe = mrm->check_sw_lw(reg1,reg2,address_sw_lw,0,banks,index,mrm->clock_core[index]);
+                    safe = mrm->check_sw_lw(reg1,reg2,address_sw_lw,0,banks,index);
+                    cout<<"safe lw "<<safe<<"\n";
                     if(safe==0){
                         int ans = lw(tokens[lineno],lineno,ins_size,lineno,0);
                         if(ans==-1){
@@ -1041,7 +1042,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                         return;
                     }
                     int address_sw_lw = coreAddress(rownumber(tokens[lineno][2])+colnumber(tokens[lineno][2]),index);
-                    safe = mrm->check_sw_lw(reg1,reg2,address_sw_lw,0,banks,index,mrm->clock_core[index]);
+                    safe = mrm->check_sw_lw(reg1,reg2,address_sw_lw,1,banks,index);
 
                     if(safe==0){
                         int ans = sw(tokens[lineno],lineno,ins_size,lineno,0);

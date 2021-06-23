@@ -66,13 +66,7 @@ int MRM::checkSafe_addi(int r1,int r2,vector<int>banks,int index){
             vector<int>row = queue_op[banks[j]][i];
             if(row[7]==index){
                 if(row[0]==1){
-                    if(row[5]==r1){
-                        currBank = banks[j];
-                        return -1;
-                    }else if(row[1]==r1){
-                        currBank = banks[j];
-                        return -1;
-                    }
+                    
                 }else{
                     if(row[5]==r1){
                         currBank = banks[j];
@@ -124,16 +118,16 @@ int MRM::check_beq_bne(int r1,int r2,vector<int>banks,int index){
 // forwarding,sw-sw ,
 
 
-//clock_cycle
-int MRM::check_sw_lw(int r1,int r2,int address,int cur_ins,vector<int>banks,int index,int clock_cycle){
+//clock_core[index]
+int MRM::check_sw_lw(int r1,int r2,int address,int cur_ins,vector<int>banks,int index){
     for(int j=0;j<banks.size();j++){
         for(int i=0;i<queue_op[banks[j]].size();i++){
             vector<int>row = queue_op[banks[j]][i];
             if(row[7]==index){
                 if(row[0]==0){
                     if(row[1]==r1 && cur_ins==0){                
-                        cout<<"Core: "<<index<<" "<<"MRM cycle no:"<<clock_cycle<<" LW process at line number :"<<row[3]+1<<" removed from queue\n";
-                        clock_cycle++;
+                        cout<<"Core: "<<index<<" "<<"MRM cycle no:"<<clock_core[index]<<" LW process at line number :"<<row[3]+1<<" removed from queue\n";
+                        clock_core[index]++;
                         queue_op[banks[j]].erase(queue_op[banks[j]].begin()+i);
                         return 0;
                     }
@@ -147,14 +141,14 @@ int MRM::check_sw_lw(int r1,int r2,int address,int cur_ins,vector<int>banks,int 
                 else{
                     if (row[2]==address && cur_ins==0){
                         stored_value=row[1];
-                        cout<<"Core: "<<index<<" "<<"MRM Forwarding ,cycle no:"<<clock_cycle<<" ";
-                        clock_cycle++;
+                        cout<<"Core: "<<index<<" "<<"MRM Forwarding ,cycle no:"<<clock_core[index]<<" ";
+                        clock_core[index]++;
                         return -2;
                     }
                     else if (row[2]==address && cur_ins==1){
                         stored_value=row[3];
-                        cout<<"Core: "<<index<<" "<<"MRM cycle no:"<<clock_cycle<<" SW process at line number :"<<row[3]+1<<" removed from queue\n";
-                        clock_cycle++;
+                        cout<<"Core: "<<index<<" "<<"MRM cycle no:"<<clock_core[index]<<" SW process at line number :"<<row[3]+1<<" removed from queue\n";
+                        clock_core[index]++;
                         queue_op[banks[j]].erase(queue_op[banks[j]].begin()+i);
                         return 0;
                     }
