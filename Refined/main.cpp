@@ -8,7 +8,7 @@ using namespace std;
 int main(){
 
 	int num_cores=1;
-	int max_clock;
+	int max_clock=0;
 	vector<Core*> cores(num_cores);
 	vector<int> cycles(num_cores);
 	MRM* mrm_universal=new MRM(10,2);
@@ -20,6 +20,7 @@ int main(){
 	int num_completed=0;
 	vector<bool> completed(num_cores,false);
 	int debug=0;
+	vector<bool> updatedBanks(4,false);
 	while (num_cores!=num_completed && debug<400){
 
 		debug++;
@@ -27,9 +28,10 @@ int main(){
 
 			if (!completed[i]){
 				cores[i]->parse_next();
+
 				//cout<<"comp "<<cores[i]->isCompleted<<"\n";
 				if (cores[i]->isCompleted){
-					cout<<"core "<<i<<"\n";
+					// cout<<"core "<<i<<"\n";
 					completed[i]=true;
 					num_completed++;
 				}
@@ -37,9 +39,43 @@ int main(){
 
 
 		}
+		
+		for (int i=0;i<4;i++){
+			int log = mrm_universal->update(i);
+				
+		}
+
 
 	}
-	for(int i=1;i<=num_cores;i++){
+
+	int numUpdated = 0;
+	while (numUpdated != 4){
+
+		for (int i=0;i<4;i++){
+			int log = mrm_universal->update(i);
+			mrm_universal->clock_core[i]++;
+			// cout<<i<<"::"<<log<<"\n";
+			if (log == -1){
+				updatedBanks[i] = true;
+			}
+		}
+		numUpdated = 0;
+		// for (int i=0;i<4;i++){
+			// cout<<(updatedBanks[i]?"TRue ":"False ");
+		// }
+		for (int i=0;i<4;i++){
+			if (updatedBanks[i]){
+				numUpdated++;
+			}
+		}
+		// cout<<"num:"<<numUpdated<<"\n";
+
+	}
+
+
+
+
+	for(int i=1;i<=4;i++){
 		if(mrm_universal->clock_core[i]>max_clock){
 			max_clock = mrm_universal->clock_core[i];
 		}

@@ -1,2 +1,13 @@
 addi $s1 , $zero , 1
 lw $s2 ,1000($zero)
+addi $t1,$t1,0
+lw $s2 ,1000($zero)
+lw $s2 ,1000($zero)
+lw $s2 ,1000($zero)
+
+
+// MRM:Request sent to dram
+current = remaining_cycles =12
+6 - 17 :
+
+cycle 17: Dram 
