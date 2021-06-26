@@ -4,6 +4,9 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+
+
+
 struct curr_process
 {
     int reg0,reg1,isLW,remaining_cycles,startCycle,indx,address,waiting_cycle;
@@ -22,7 +25,7 @@ class MRM{
 		int checkSafe_op(int r1,int r2,int r3,vector<int>banks,int index);
 		int checkSafe_addi(int r1,int r2,vector<int>banks,int index);
 		int check_beq_bne(int r1,int r2,vector<int>banks,int index);
-		vector<vector<string>>token_core;
+		vector<vector<vector<string>>>token_core;
 		int stored_value=-1;
 		vector<int>notSafeRow;
 		int currBank = 0;
@@ -37,9 +40,10 @@ class MRM{
 		vector<int> clock_core;
 		int safe=0;
 		vector<int> rowbufferUpdate;
-		int rowdelay,coldelay,priority_row1=-1,priority_row2=-1;	
+		int rowdelay,coldelay,priority_row1=-1,priority_row2=-1,priority_num = -1;	
 		vector<bool> prev_row_changed;	
 		void request_to_DRAM(int bankNum);
 		vector<int> getBanks(int index,int numCores);
 		void setClockCore(int index, int totalCores,int bankNum);
+		int iNum = 0;
 };

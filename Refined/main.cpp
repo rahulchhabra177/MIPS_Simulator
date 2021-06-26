@@ -7,7 +7,9 @@ using namespace std;
 
 int main(){
 
-	int num_cores=2;
+	int num_cores;
+	cout<<"Enter Number of Cores:";
+	cin>>num_cores;
 	int max_clock=0;
 	vector<Core*> cores(num_cores);
 	vector<int> cycles(num_cores);
@@ -28,7 +30,7 @@ int main(){
 
 			if (!completed[i]){
 				cores[i]->parse_next();
-
+				// cores[i]-> print_reg(mrm_universal->regesterFile[i]);
 				//cout<<"comp "<<cores[i]->isCompleted<<"\n";
 				if (cores[i]->isCompleted){
 					// cout<<"core "<<i<<"\n";
@@ -68,6 +70,7 @@ int main(){
 				numUpdated++;
 			}
 		}
+
 		// cout<<"num:"<<numUpdated<<"\n";
 
 	}
@@ -90,6 +93,13 @@ int main(){
 		}
 	}
 
+	vector<string> reg_name = {"$0","$1","$v0","$v1","$a0","$a1","$a2","$a3","$t0","$t1","$t2","$t3","$t4","$t5","$t6","$t7","$t8","$t9","$t10","$s1","$s2","$s3","$s4","$s5","$s6","$s7","$s8","$k1","$gp","$sp","$fp","$ra"};
+	
+
+	for (int i=0;i<num_cores;i++){
+		cout<<"Core "<<i+1<<":\n";
+		cores[i]-> print_reg(mrm_universal->regesterFile[i]);
+	}
 
 return 0;
 

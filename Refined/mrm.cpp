@@ -11,6 +11,7 @@ MRM::MRM(int r,int c){
     dram.resize(1048576,0);
     rowbufferUpdate.resize(4,0);
     rowbuffer.resize(4,-1);
+    token_core.resize(4);
 }
 
 
@@ -58,19 +59,52 @@ bool MRM::sortVec(const vector<int>& a,const vector<int>& b/*,int priority_row1=
     int x=a[4];
     int y=b[4];
     if (x==priority_row1){
+
+        if (y == priority_row1){
+            if (a[8] == priority_num){
+                return true;
+            }
+            else if (b[8] == priority_num){
+                return false;
+            }
+            else{
+                return a[8]<b[8];
+            }
+        }
         return true;
     }
     else if (y==priority_row1){
         return false;
     }
-    else if (x==priority_row2){
+    else if (x == priority_row2){
+
+        if (a[8] == priority_num){
+                return true;
+            }
+            else if (b[8] == priority_num){
+                return false;
+            }
+            else{
+                return a[8]<b[8];
+            }
+
         return true;
     }
     else if (y==priority_row2){
         return false;
     }
     else{
-
+        if (a[4] == b[4]){
+            if (a[8] == priority_num){
+                return true;
+            }
+            else if (b[8] == priority_num){
+                return false;
+            }
+            else{
+                return a[8]<b[8];
+            }
+        }
         return a[4]<b[4];
     }
 
@@ -85,7 +119,7 @@ int MRM::checkSafe_op(int r1,int r2,int r3,vector<int>banks,int index){
                     if(row[1]==r2||row[1]==r3){
                         currBank = banks[j];
                         stored_value = row[4];
-                        notSafeRow[currBank] = row[4];
+                        notSafeRow[currBank] = row[8];
                         return -1;
                     }
                     else if (row[1]==r1){
@@ -110,7 +144,7 @@ int MRM::checkSafe_addi(int r1,int r2,vector<int>banks,int index){
                 }else{
                     if(row[1]==r2){
                         currBank = banks[j];
-                        notSafeRow[currBank] = row[4];
+                        notSafeRow[currBank] = row[8];
                         return -1;
                     }
                     else if (row[1]==r1){
@@ -127,10 +161,25 @@ int MRM::checkSafe_addi(int r1,int r2,vector<int>banks,int index){
 }
 void MRM::request_to_DRAM(int bankNum){
     priority_row1 = rowbuffer[bankNum];
+
+    if (priority_num!=-1){
+
+        for (auto process:queue_op[bankNum]){
+            if (process[8] == priority_num){
+                priority_row2 = process[4];
+                break;
+            }
+        }
+
+    }
+    // for (auto u:queue_op[bankNum])cout<<u[4]<<":"<<u[8]<<" " ;
+        // cout<<"\n";
     sort(queue_op[bankNum].begin(),queue_op[bankNum].end(),[&](vector<int>a,vector<int>b){return sortVec(a,b);});
     cout<<"core:"<<queue_op[bankNum][0][7]<<" cycle "<<(clock_core[bankNum]+1)<<" MRM:Request Sent to Dram on bank number: "<<bankNum<<"\n";
 
-    clock_core[bankNum]++;
+    // for (auto u:queue_op[bankNum])cout<<u[4]<<":"<<u[8]<<" ";
+        // cout<<"\n";
+    // clock_core[bankNum]++;
     current[bankNum].reg0 = queue_op[bankNum][0][1];
     current[bankNum].isLW = queue_op[bankNum][0][0];
     int curr_row = rowbuffer[bankNum];
@@ -155,7 +204,7 @@ void MRM::request_to_DRAM(int bankNum){
     current[bankNum].indx =  queue_op[bankNum][0][7];
     current[bankNum].address = queue_op[bankNum][0][2];
     rowbuffer[bankNum] = required_row ;
-    current[bankNum].regLW = token_core[current[bankNum].indx-1][1];
+    current[bankNum].regLW = token_core[current[bankNum].indx-1][queue_op[bankNum][0][3]][1];
     if (queue_op[bankNum][0][0] == 1){
         prev_row_changed[bankNum] = true;
     }
@@ -220,7 +269,7 @@ int MRM::check_beq_bne(int r1,int r2,vector<int>banks,int index){
                     if(row[0]==1){
                         if(row[1]==r1){
                             currBank = banks[j];
-                            notSafeRow[currBank] = row[4];
+                            notSafeRow[currBank] = row[8];
                             return -1;
                         }
                     }
@@ -235,7 +284,7 @@ int MRM::check_beq_bne(int r1,int r2,vector<int>banks,int index){
                     if(row[0]==1){
                         if(row[1]==r1||row[1]==r2){
                             currBank = banks[j];
-                            notSafeRow[currBank] = row[4];
+                            notSafeRow[currBank] = row[8];
                             return -1;
                         }
                     }
@@ -258,7 +307,7 @@ int MRM::check_sw_lw(int r1,int r2,int address,int cur_ins,vector<int>banks,int 
                 if(row[0]==1){
                     if(row[1]==r1 && cur_ins==0){                
                         cout<<"Core: "<<index<<" "<<"MRM cycle no:"<<(clock_core[j]+1)<<" LW process at line number :"<<row[3]+1<<" removed from queue\n";
-                        clock_core[index]++;
+                        // clock_core[index]++;
                         queue_op[banks[j]].erase(queue_op[banks[j]].begin()+i);
                         return 0;
                     }
@@ -273,13 +322,13 @@ int MRM::check_sw_lw(int r1,int r2,int address,int cur_ins,vector<int>banks,int 
                     if (row[2]==address && cur_ins==0){
                         stored_value=row[1];
                         cout<<"Core: "<<index<<" "<<"MRM Forwarding ,cycle no:"<<(clock_core[j]+1)<<" ";
-                        clock_core[index]++;
+                        // clock_core[index]++;
                         return -2;
                     }
                     else if (row[2]==address && cur_ins==1){
                         stored_value=row[3];
                         cout<<"Core: "<<index<<" "<<"MRM cycle no:"<<(clock_core[j]+1)<<" SW process at line number :"<<row[3]+1<<" removed from queue\n";
-                        clock_core[index]++;
+                        // clock_core[index]++;
                         queue_op[banks[j]].erase(queue_op[banks[j]].begin()+i);
                         return 0;
                     }
