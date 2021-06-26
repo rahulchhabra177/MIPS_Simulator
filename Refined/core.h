@@ -6,7 +6,6 @@ class Core{
 
 
     public:
-    	vector<int> regesterFile;
     	MRM* mrm=nullptr;
 		int totalCores;
 		int stackpointer;
