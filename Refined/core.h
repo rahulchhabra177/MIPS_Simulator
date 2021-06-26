@@ -6,7 +6,6 @@ class Core{
 
 
     public:
-    	vector<int> regesterFile;
     	MRM* mrm=nullptr;
 		int totalCores;
 		int stackpointer;
@@ -18,6 +17,7 @@ class Core{
 		int sequence_cycle = 0;
 		int lineno = 0;
 		int ins_size;
+		vector<int>banks;
 		vector<vector<string>> instruction_memory;
 		map<string,int>labels;
 		Core(string filename ,int idx, int rDelay , int cDelay , MRM* mrm,int total_cores);
@@ -40,8 +40,12 @@ class Core{
 		int bne(vector<string> tokens,int lineno,map<string,int>labels);
 		int j(vector<string> tokens,int lineno,map<string,int>labels);
 		int lw(vector<string> tokens,int lineno,int ins_size,int abs_lineno,int change);
+		int push_lw(vector<string> tokens,int lineno,int ins_size,int abs_lineno,int change);
+		int push_sw(vector<string> tokens,int lineno,int ins_size,int abs_lineno,int change);
 		int sw(vector<string> tokens,int lineno,int ins_size, int abs_lineno, int change);
 		void parse(vector<vector<string>> tokens,map<string,int>labels);
+		void increment();
+		void setSeqCycle();
 
 
 };
