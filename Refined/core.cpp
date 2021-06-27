@@ -326,7 +326,7 @@ int Core::push_lw(vector<string> tokens,int lineno,int ins_size,int abs_lineno,i
     //Assignment 4 start
     int row_reg = row_regester(tokens[2]);
     vector<int>current_op;
-    current_op.resize(9,0);
+    current_op.resize(10,0);
     current_op[0] = 1;
     current_op[1] = r0;
     current_op[2] = addressnew;
@@ -336,8 +336,11 @@ int Core::push_lw(vector<string> tokens,int lineno,int ins_size,int abs_lineno,i
     current_op[6] = 1;
     current_op[7] = index; 
     current_op[8] = mrm->iNum;
+    current_op[9] = -1;
     mrm->iNum++;
-
+    if(mrm->queue_op[getBankNum(addressnew)].size()>16){
+        return -3;
+    }
     mrm->queue_op[getBankNum(addressnew)].push_back(current_op);
     
 
@@ -447,7 +450,7 @@ int Core::push_sw(vector<string> tokens,int lineno,int ins_size, int abs_lineno,
     //Assignment 4 start
     int row_reg = row_regester(tokens[2]);
     vector<int> current_op;
-    current_op.resize(9,0);
+    current_op.resize(10,0);
     current_op[0] = 0;
     current_op[1] = r0;
     current_op[2] = addressnew;
@@ -457,7 +460,11 @@ int Core::push_sw(vector<string> tokens,int lineno,int ins_size, int abs_lineno,
     current_op[6] = 1;
     current_op[7] = index;
     current_op[8] = mrm->iNum;
+    current_op[9] = mrm->regesterFile[index-1][r0];
     mrm->iNum++;
+    if(mrm->queue_op[getBankNum(addressnew)].size()>16){
+        return -3;
+    }
     mrm->queue_op[getBankNum(addressnew)].push_back(current_op);
     
     //Assignment 4 end
@@ -620,7 +627,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
         
     int safe =0;
     int button =0;
-    if (lineno>=tokens.size()){isCompleted=true;}
+    if (lineno>=tokens.size()){isCompleted=true;mrm->indexCompleted[index-1] = true;}
     setSeqCycle();
     
     if(lineno < tokens.size()){
@@ -640,10 +647,11 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
             button = -1;
             if (lineno>=tokens.size()){return;}
         }
-            /*    cout<<"line ins "<<lineno<<" "<<ins_size<<"\n";
+               //cout<<"line ins "<<lineno<<" "<<ins_size<<"\n";
             //Assignment 4 start
+            /*cout<<"//////////////////////////////////////////////////////\n";
             if(lineno<tokens.size()){
-                cout<<"size "<<tokens.size()<<" "<<lineno<<"\n";
+                //cout<<"size "<<tokens.size()<<" "<<lineno<<"\n";
                 cout<<"line start\n";
                 for(int i=0;i<tokens[lineno].size();i++){
                     cout<<tokens[lineno][i]<<" ";
@@ -660,7 +668,8 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                     cout<<"\n";
                 }
             }
-            cout<<"queue ends\n";*/
+            cout<<"queue ends\n";
+            cout<<"//////////////////////////////////////////////////////\n";*/
             string first = tokens[lineno][0];
             //cout<<mrm->current[index].reg0<<" "<<mrm->current[index].reg1<<" "<<mrm->mrm->mrm->mrm->mrm->mrm->mrm->mrm->mrm->current[index].isLW<<"\n";
             if(first=="add"){
@@ -942,7 +951,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                     int reg1 = convertRegisters(tokens[lineno][1]);
                     int reg2 = row_regester(tokens[lineno][2]);
                     if(reg1==-1||reg2==-1){
-                        mrm->clock_core[index]++;
+                        //mrm->clock_core[index]++;
                         cerr<<"Syntax Error.\n";
                         return;
                     }
@@ -954,8 +963,12 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                         increment();
                         int ans = push_lw(tokens[lineno],lineno,ins_size,lineno,0);
                         if(ans==-1){
-                            mrm->clock_core[index]++;
+                            //mrm->clock_core[index]++;
                             cerr<<"Syntax error\n";
+                            return;
+                        }
+                        else if(ans==-3){
+                            increment();
                             return;
                         }
                         repetion[7] = repetion[7]+1;
@@ -986,7 +999,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                     int reg1 = convertRegisters(tokens[lineno][1]);
                     int reg2 = row_regester(tokens[lineno][2]);
                     if(reg1==-1||reg2==-1){
-                        mrm->clock_core[index]++;
+                        //mrm->clock_core[index]++;
                         cerr<<"Syntax Error.\n";
                         return;
                     }
@@ -998,8 +1011,11 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                         increment();
                         int ans = push_sw(tokens[lineno],lineno,ins_size,lineno,0);
                         if(ans==-1){
-                            mrm->clock_core[index]++;
+                            //mrm->clock_core[index]++;
                             cerr<<"Syntax error\n";
+                            return;
+                        }else if(ans==-3){
+                            increment();
                             return;
                         }
                         repetion[8] = repetion[8]+1;
@@ -1107,6 +1123,7 @@ Core::Core(string fileName, int idx, int rDelay , int cDelay, MRM* mrm_universal
     mrm->regesterFile.resize(total_cores);
     mrm->LastDRAM_cycle.resize(total_cores,-1);
     mrm->notSafeRow.resize(4,-1);
+    mrm->indexCompleted.resize(total_cores,false);
     for(int i=0;i<mrm->regesterFile.size();i++){
         mrm->regesterFile[i].resize(32,0);
     }

@@ -9,7 +9,7 @@ using namespace std;
 
 struct curr_process
 {
-    int reg0,reg1,isLW,remaining_cycles,startCycle,indx,address,waiting_cycle;
+    int reg0,reg1,isLW,remaining_cycles,startCycle,indx,address,waiting_cycle,SW_value;
 	string regLW;
 };
 class MRM{
@@ -42,8 +42,10 @@ class MRM{
 		vector<int> rowbufferUpdate;
 		int rowdelay,coldelay,priority_row1=-1,priority_row2=-1,priority_num = -1;	
 		vector<bool> prev_row_changed;	
-		void request_to_DRAM(int bankNum);
+		void request_to_DRAM(int bankNum,int numCores);
 		vector<int> getBanks(int index,int numCores);
 		void setClockCore(int index, int totalCores,int bankNum);
 		int iNum = 0;
+		vector<int>indx_in_bank(int bankNum,int numCores);
+		vector<bool>indexCompleted;
 };

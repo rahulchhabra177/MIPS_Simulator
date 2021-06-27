@@ -14,6 +14,21 @@ MRM::MRM(int r,int c){
     token_core.resize(4);
 }
 
+vector<int> MRM::indx_in_bank(int bankNum,int numCores){
+	vector<int>indexes;
+	int lowerlimit = 256*(bankNum);
+	int upperlimit = 256*(bankNum+1)-1;
+	for(int i=0;i<numCores;i++){
+		int indexlowerlimit = (1024/numCores)*(i);
+		int indexupperlimit = (1024/numCores)*(i+1)-1;
+		if(upperlimit-indexlowerlimit>0&&lowerlimit-indexupperlimit<0){
+            if(indexCompleted[i]==false){
+                indexes.push_back(i);
+            }
+		}
+	}
+	return indexes;
+}
 
 int MRM::Mem_Req_Order(int rowbuffer,vector<vector<int>> queue_op,vector<int>current_op,int lineno,int size,int safe){
     if(rowbuffer == -1){
@@ -159,7 +174,7 @@ int MRM::checkSafe_addi(int r1,int r2,vector<int>banks,int index){
     }
     return 0;
 }
-void MRM::request_to_DRAM(int bankNum){
+void MRM::request_to_DRAM(int bankNum,int numCores){
     priority_row1 = rowbuffer[bankNum];
 
     if (priority_num!=-1){
@@ -170,47 +185,140 @@ void MRM::request_to_DRAM(int bankNum){
                 break;
             }
         }
+        priority_num=-1;
 
     }
     // for (auto u:queue_op[bankNum])cout<<u[4]<<":"<<u[8]<<" " ;
         // cout<<"\n";
     sort(queue_op[bankNum].begin(),queue_op[bankNum].end(),[&](vector<int>a,vector<int>b){return sortVec(a,b);});
-    cout<<"core:"<<queue_op[bankNum][0][7]<<" cycle "<<(clock_core[bankNum]+1)<<" MRM:Request Sent to Dram on bank number: "<<bankNum<<"\n";
+    if(queue_op[bankNum][0][4]==rowbuffer[bankNum]){
+        cout<<"core:"<<queue_op[bankNum][0][7]<<" cycle "<<(clock_core[bankNum]+1)<<" MRM:Request Sent to Dram on bank number: "<<bankNum<<"\n";
 
-    // for (auto u:queue_op[bankNum])cout<<u[4]<<":"<<u[8]<<" ";
-        // cout<<"\n";
-    // clock_core[bankNum]++;
-    current[bankNum].reg0 = queue_op[bankNum][0][1];
-    current[bankNum].isLW = queue_op[bankNum][0][0];
-    int curr_row = rowbuffer[bankNum];
-    int required_row = queue_op[bankNum][0][4] ;
+        // for (auto u:queue_op[bankNum])cout<<u[4]<<":"<<u[8]<<" ";
+            // cout<<"\n";
+        // clock_core[bankNum]++;
+        current[bankNum].reg0 = queue_op[bankNum][0][1];
+        current[bankNum].isLW = queue_op[bankNum][0][0];
+        int curr_row = rowbuffer[bankNum];
+        int required_row = queue_op[bankNum][0][4] ;
 
-    if (curr_row == required_row){
-        current[bankNum].remaining_cycles = coldelay;
-        current[bankNum].waiting_cycle = coldelay;
+        if (curr_row == required_row){
+            current[bankNum].remaining_cycles = coldelay;
+            current[bankNum].waiting_cycle = coldelay;
 
+        }
+        else if (prev_row_changed[bankNum]){
+            current[bankNum].remaining_cycles = 2*rowdelay + coldelay;
+            current[bankNum].waiting_cycle = 2*rowdelay + coldelay;
+            prev_row_changed[bankNum] = false;
+        }
+        else {
+            current[bankNum].remaining_cycles = rowdelay + coldelay;
+            current[bankNum].waiting_cycle = rowdelay + coldelay;
+            prev_row_changed[bankNum] = false;
+        }
+        current[bankNum].startCycle = clock_core[bankNum];
+        current[bankNum].indx =  queue_op[bankNum][0][7];
+        current[bankNum].address = queue_op[bankNum][0][2];
+        current[bankNum].SW_value = queue_op[bankNum][0][9];
+        rowbuffer[bankNum] = required_row ;
+        current[bankNum].regLW = token_core[current[bankNum].indx-1][queue_op[bankNum][0][3]][1];
+        if (queue_op[bankNum][0][0] == 1){
+            prev_row_changed[bankNum] = true;
+        }
+
+
+        queue_op[bankNum].erase(queue_op[bankNum].begin());
+
+    }else{
+        vector<int>indexes = indx_in_bank(bankNum,numCores);
+        if(indexes.size()<=1){
+            cout<<"core:"<<queue_op[bankNum][0][7]<<" cycle "<<(clock_core[bankNum]+1)<<" MRM:Request Sent to Dram on bank number: "<<bankNum<<"\n";
+
+            // for (auto u:queue_op[bankNum])cout<<u[4]<<":"<<u[8]<<" ";
+                // cout<<"\n";
+            // clock_core[bankNum]++;
+            current[bankNum].reg0 = queue_op[bankNum][0][1];
+            current[bankNum].isLW = queue_op[bankNum][0][0];
+            int curr_row = rowbuffer[bankNum];
+            int required_row = queue_op[bankNum][0][4] ;
+
+            if (curr_row == required_row){
+                current[bankNum].remaining_cycles = coldelay;
+                current[bankNum].waiting_cycle = coldelay;
+
+            }
+            else if (prev_row_changed[bankNum]){
+                current[bankNum].remaining_cycles = 2*rowdelay + coldelay;
+                current[bankNum].waiting_cycle = 2*rowdelay + coldelay;
+                prev_row_changed[bankNum] = false;
+            }
+            else {
+                current[bankNum].remaining_cycles = rowdelay + coldelay;
+                current[bankNum].waiting_cycle = rowdelay + coldelay;
+                prev_row_changed[bankNum] = false;
+            }
+            current[bankNum].startCycle = clock_core[bankNum];
+            current[bankNum].indx =  queue_op[bankNum][0][7];
+            current[bankNum].address = queue_op[bankNum][0][2];
+            current[bankNum].SW_value = queue_op[bankNum][0][9];
+            rowbuffer[bankNum] = required_row ;
+            current[bankNum].regLW = token_core[current[bankNum].indx-1][queue_op[bankNum][0][3]][1];
+            if (queue_op[bankNum][0][0] == 1){
+                prev_row_changed[bankNum] = true;
+            }
+
+
+            queue_op[bankNum].erase(queue_op[bankNum].begin());
+        }else{
+            for(int i=0;i<queue_op[bankNum].size();i++){
+                if(queue_op[bankNum][i][7]!=current[bankNum].indx){
+                    priority_row1 = queue_op[bankNum][i][4];
+                    break;
+                }
+            }
+            sort(queue_op[bankNum].begin(),queue_op[bankNum].end(),[&](vector<int>a,vector<int>b){return sortVec(a,b);});
+            cout<<"core:"<<queue_op[bankNum][0][7]<<" cycle "<<(clock_core[bankNum]+1)<<" MRM:Request Sent to Dram on bank number: "<<bankNum<<"\n";
+
+            // for (auto u:queue_op[bankNum])cout<<u[4]<<":"<<u[8]<<" ";
+                // cout<<"\n";
+            // clock_core[bankNum]++;
+            current[bankNum].reg0 = queue_op[bankNum][0][1];
+            current[bankNum].isLW = queue_op[bankNum][0][0];
+            int curr_row = rowbuffer[bankNum];
+            int required_row = queue_op[bankNum][0][4] ;
+
+            if (curr_row == required_row){
+                current[bankNum].remaining_cycles = coldelay;
+                current[bankNum].waiting_cycle = coldelay;
+
+            }
+            else if (prev_row_changed[bankNum]){
+                current[bankNum].remaining_cycles = 2*rowdelay + coldelay;
+                current[bankNum].waiting_cycle = 2*rowdelay + coldelay;
+                prev_row_changed[bankNum] = false;
+            }
+            else {
+                current[bankNum].remaining_cycles = rowdelay + coldelay;
+                current[bankNum].waiting_cycle = rowdelay + coldelay;
+                prev_row_changed[bankNum] = false;
+            }
+            current[bankNum].startCycle = clock_core[bankNum];
+            current[bankNum].indx =  queue_op[bankNum][0][7];
+            current[bankNum].address = queue_op[bankNum][0][2];
+            current[bankNum].SW_value = queue_op[bankNum][0][9];
+            rowbuffer[bankNum] = required_row ;
+            current[bankNum].regLW = token_core[current[bankNum].indx-1][queue_op[bankNum][0][3]][1];
+            if (queue_op[bankNum][0][0] == 1){
+                prev_row_changed[bankNum] = true;
+            }
+
+
+            queue_op[bankNum].erase(queue_op[bankNum].begin());
+
+        }
     }
-    else if (prev_row_changed[bankNum]){
-        current[bankNum].remaining_cycles = 2*rowdelay + coldelay;
-        current[bankNum].waiting_cycle = 2*rowdelay + coldelay;
-        prev_row_changed[bankNum] = false;
-    }
-    else {
-        current[bankNum].remaining_cycles = rowdelay + coldelay;
-        current[bankNum].waiting_cycle = rowdelay + coldelay;
-        prev_row_changed[bankNum] = false;
-    }
-    current[bankNum].startCycle = clock_core[bankNum];
-    current[bankNum].indx =  queue_op[bankNum][0][7];
-    current[bankNum].address = queue_op[bankNum][0][2];
-    rowbuffer[bankNum] = required_row ;
-    current[bankNum].regLW = token_core[current[bankNum].indx-1][queue_op[bankNum][0][3]][1];
-    if (queue_op[bankNum][0][0] == 1){
-        prev_row_changed[bankNum] = true;
-    }
-
-
-    queue_op[bankNum].erase(queue_op[bankNum].begin());
+    
 }
 
 int MRM::update(int bankNum,int numCores)
@@ -222,7 +330,7 @@ int MRM::update(int bankNum,int numCores)
             current[bankNum].remaining_cycles=0;
             LastDRAM_cycle[current[bankNum].indx] = current[bankNum].startCycle+current[bankNum].waiting_cycle;
             if (current[bankNum].isLW == 0){
-                dram[current[bankNum].address] = regesterFile[current[bankNum].indx-1][current[bankNum].reg0];
+                dram[current[bankNum].address] = current[bankNum].SW_value;
                 cout<<": "<<current[bankNum].address<<"-"<<(current[bankNum].address +3)<<" = "<<dram[current[bankNum].address]<<"\n";
             }
             else{
@@ -232,7 +340,7 @@ int MRM::update(int bankNum,int numCores)
             setClockCore(current[bankNum].indx,numCores,bankNum);
             current[bankNum].isLW=-1;
             if(!queue_op[bankNum].empty()){
-                request_to_DRAM(bankNum);
+                request_to_DRAM(bankNum,numCores);
             }
     }
 
@@ -242,7 +350,7 @@ int MRM::update(int bankNum,int numCores)
 
         if (!queue_op[bankNum].empty()){
             
-            request_to_DRAM(bankNum);
+            request_to_DRAM(bankNum,numCores);
             
             // only would work for 4 cores
 

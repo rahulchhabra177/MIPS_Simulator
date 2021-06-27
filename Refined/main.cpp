@@ -5,18 +5,19 @@ using namespace std;
 
 
 
-int main(){
+int main(int argc,char* argv[]){
 
-	int num_cores;
-	cout<<"Enter Number of Cores:";
-	cin>>num_cores;
+	int num_cores,rowdelay,coldelay;
+	num_cores = stoi(argv[1]);
+	rowdelay = stoi(argv[2]);
+	coldelay = stoi(argv[3]);
 	int max_clock=0;
 	vector<Core*> cores(num_cores);
 	vector<int> cycles(num_cores);
-	MRM* mrm_universal=new MRM(10,2);
+	MRM* mrm_universal=new MRM(rowdelay,coldelay);
 	mrm_universal->rowbufferBank.resize(4);
 	for (int i=0;i<num_cores;i++){
-		cores[i]=new Core("./testcases/testcase"+to_string(i+1)+".txt",i+1,10,2,mrm_universal,num_cores);
+		cores[i]=new Core("./testcases/testcase"+to_string(i+1)+".txt",i+1,rowdelay,coldelay,mrm_universal,num_cores);
 	}
 
 	int num_completed=0;
@@ -100,6 +101,7 @@ int main(){
 		cout<<"Core "<<i+1<<":\n";
 		cores[i]-> print_reg(mrm_universal->regesterFile[i]);
 	}
+	cout<<"\n";
 
 return 0;
 
