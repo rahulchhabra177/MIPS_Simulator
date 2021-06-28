@@ -376,14 +376,12 @@ int Core::rownumber(string s){
             int pr = s.find_first_of(parenr);
             string stradress = (s.substr(1,pr-pos-1));
             rowno = convertRegisters(stradress);
-            mrm->current[index].reg1 = rowno;
             rowno = mrm->regesterFile[index-1][rowno];
             return rowno;
         }else{
             int pr = s.find_first_of(parenr);
             string stradress = (s.substr(pos+1,pr-pos-1));
             rowno = convertRegisters(stradress);
-            mrm->current[index].reg1 = rowno;
             if(rowno==-1){
                 return -1;
             }
@@ -440,8 +438,8 @@ bool Core::isSafeOp(int reg1,int reg2,int reg3){
 bool Core::isSafe_beq_bne(int reg1,int reg2){
     vector<int>banks = queueBank(index);
     for(int i=0;i<banks.size();i++){
-        if(mrm->current[index].isLW==1){
-            if(mrm->current[index].isLW && (reg1==mrm->current[index].reg0||reg2 == mrm->current[index].reg0)){
+        if(mrm->current[banks[i]].isLW==1){
+            if(mrm->current[banks[i]].isLW && (reg1==mrm->current[banks[i]].reg0||reg2 == mrm->current[banks[i]].reg0)){
                 return false;
             }
         }
@@ -535,7 +533,7 @@ int Core::push_lw(vector<string> tokens,int lineno,int ins_size,int abs_lineno,i
     int indexlowerlimit = (1024/totalCores)*(index-1)*1024;
     int indexupperlimit = (1024/totalCores)*(index)*1024 -1;
 
-    if(addressnew<indexlowerlimit||addressnew>indexupperlimit){
+    if(addressnew<=indexlowerlimit||addressnew>indexupperlimit){
         cerr<<"Error: Memory not accessible\n";
         isCompleted = true;
         mrm->indexCompleted[index -1] = true;
@@ -580,7 +578,7 @@ int Core::push_sw(vector<string> tokens,int lineno,int ins_size, int abs_lineno,
     int indexlowerlimit = (1024/totalCores)*(index-1)*1024;
     int indexupperlimit = (1024/totalCores)*(index)*1024 -1;
 
-    if(addressnew<indexlowerlimit||addressnew>indexupperlimit){
+    if(addressnew<=indexlowerlimit||addressnew>indexupperlimit){
         cerr<<"Error: Memory not accessible\n";
         isCompleted = true;
         mrm->indexCompleted[index -1] = true;
@@ -665,6 +663,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
         
         else{
 
+
         if(tokens[lineno].size()==0){
             lineno++;
             button = -1;
@@ -682,7 +681,6 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                     int reg2 = convertRegisters(tokens[lineno][2]);
                     int reg3 = convertRegisters(tokens[lineno][3]);
                     if(reg1==-1||reg2==-1||reg3==-1){
-                        mrm->clock_core[index]++;
                         cerr<<"Error\n";
                         isCompleted = true;mrm->indexCompleted[index-1] = true;
                         return;
@@ -727,7 +725,6 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                     int reg2 = convertRegisters(tokens[lineno][2]);
                     int reg3 = convertRegisters(tokens[lineno][3]);
                     if(reg1==-1||reg2==-1||reg3==-1){
-                        mrm->clock_core[index]++;
                         cerr<<"Error\n";
                         isCompleted = true;mrm->indexCompleted[index-1] = true;
                         return;
@@ -771,7 +768,6 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                     int reg2 = convertRegisters(tokens[lineno][2]);
                     int reg3 = convertRegisters(tokens[lineno][3]);
                     if(reg1==-1||reg2==-1||reg3==-1){
-                        mrm->clock_core[index]++;
                         cerr<<"Error\n";
                         isCompleted = true;mrm->indexCompleted[index-1] = true;
                         return;
@@ -949,7 +945,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                     string toLabel = tokens[lineno][1];
                     lineno = j(tokens[lineno],lineno,labels);
                     repetion[6] = repetion[6]+1;
-                    cout<<"core:"<<index<<",cycle "<<(mrm->clock_core[index]+1)<<": j:"<<toLabel<<"\n";
+                    cout<<"core:"<<index<<",cycle "<<(sequence_cycle+1)<<": j:"<<toLabel<<"\n";
                     increment();
                 }
 
@@ -1008,6 +1004,7 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                 }
 
             }else if(first == "sw"){
+
                 if(tokens[lineno].size()!=3){
                     cerr<<"Syntax Error.\n";
                     isCompleted = true;mrm->indexCompleted[index-1] = true;
@@ -1023,7 +1020,6 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                     }
                     int address_sw_lw = coreAddress(rownumber(tokens[lineno][2])+colnumber(tokens[lineno][2]),index);
                     safe = mrm->check_sw_lw(reg1,reg2,address_sw_lw,1,banks,index);
-
                     if(safe==0){
                         cout<<"core:"<<index<<" cycle "<<(sequence_cycle+1)<<" Request sent to MRM "<<getIns(tokens[lineno])<<" \n";
                         increment();
@@ -1065,7 +1061,6 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                     string immi = tokens[lineno][3];
                     int pos = immi.find_first_not_of(digit);
                     if(reg1==-1||reg2==-1||pos!=-1){
-                        mrm->clock_core[index]++;
                         cerr<<"Error\n";
                         isCompleted = true;mrm->indexCompleted[index-1] = true;
                         return;

@@ -204,12 +204,10 @@ void MRM::request_to_DRAM(int bankNum,int numCores){
         cout<</*"core:"<<queue_op[bankNum][0][7]<<*/"cycle "<<(clock_core[bankNum]+1)<<" MRM:Request Sent to Dram on bank number: "<<bankNum<<"\n";
         MRM_Delay+=1;
         rCycles.insert(clock_core[bankNum]);
-
         current[bankNum].reg0 = queue_op[bankNum][0][1];
         current[bankNum].isLW = queue_op[bankNum][0][0];
         int curr_row = rowbuffer[bankNum];
         int required_row = queue_op[bankNum][0][4] ;
-
         if (curr_row == required_row){
             if (clock_core[bankNum]+coldelay>max_cycle){
                     queue_op[bankNum].clear();
@@ -379,7 +377,7 @@ void MRM::request_to_DRAM(int bankNum,int numCores){
     
 }
 
-int MRM::update(int bankNum,int numCores)
+int MRM::update(int bankNum,int numCores,bool mrm_delay)
 {
     if (current[bankNum].remaining_cycles==1){
             cout<<"core:"<<current[bankNum].indx<<"cycle "<<(current[bankNum].startCycle+1)<<"-"<<(current[bankNum].startCycle + current[bankNum].waiting_cycle )<<(current[bankNum].isLW?":LW":":SW")<<" process completed on bank number "<<bankNum;
@@ -398,9 +396,9 @@ int MRM::update(int bankNum,int numCores)
             setClockCore(current[bankNum].indx,numCores,bankNum);
             current[bankNum].isLW=-1;
             if(!queue_op[bankNum].empty()){
-                // if (rCycles.find(clock_core[bankNum])==rCycles.end()){
+                 if (rCycles.find(clock_core[bankNum])==rCycles.end()||mrm_delay){
                     request_to_DRAM(bankNum,numCores);
-                // }
+                 }
 
             }else{
                 //DRAM
@@ -409,17 +407,15 @@ int MRM::update(int bankNum,int numCores)
                     writeBackCycle[bankNum] = (current[bankNum].startCycle + current[bankNum].waiting_cycle);
                 }
             }
-    }
-//10
-    //9 
+    } 
 
 
     else if (current[bankNum].remaining_cycles==0){
 
         if (!queue_op[bankNum].empty()){
-            // if (rCycles.find(clock_core[bankNum])==rCycles.end()){
+             if (rCycles.find(clock_core[bankNum])==rCycles.end()||mrm_delay){
                     request_to_DRAM(bankNum,numCores);
-                // }
+                 }
 
         }
         else{

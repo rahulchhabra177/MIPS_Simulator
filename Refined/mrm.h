@@ -34,7 +34,7 @@ class MRM{
 		vector<int>notSafeRow;
 		int currBank = 0;
 		int currBankSort = -1;
-		int update(int bankNum,int numCores);
+		int update(int bankNum,int numCores,bool mrm_delay);
 		int check_sw_lw(int r1,int r2,int address,int cur_ins,vector<int>banks,int index);
 		map<string,int>memoryupdate;
 		vector<int>dram;

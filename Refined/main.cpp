@@ -9,6 +9,7 @@ int main(int argc,char* argv[]){
 
 	int num_cores,rowdelay,coldelay,Max_cycles;
 	int total_row_buffer_updates = 0;
+	bool mrm_delay = true;
 	if(argc<2){
 		cerr<<"Error: Enter number of cores\n";
 		return 0;
@@ -22,6 +23,9 @@ int main(int argc,char* argv[]){
 	}
 	rowdelay = stoi(argv[3+num_cores]);
 	coldelay = stoi(argv[4+num_cores]);
+	if(argc>5+num_cores){
+		mrm_delay = false;
+	}
 	int max_clock=0;
 	vector<Core*> cores(num_cores);
 	vector<int> cycles(num_cores);
@@ -38,7 +42,6 @@ int main(int argc,char* argv[]){
 	int Cycle_complete=0;
 	vector<bool> updatedBanks(4,false);
 	while (num_cores!=num_completed && Cycle_complete<Max_cycles){
-// cout<<"\n";
 		for (int i=0;i<num_cores;i++){
 
 			if (!completed[i]){
@@ -52,7 +55,7 @@ int main(int argc,char* argv[]){
 		}
 		Cycle_complete = *max_element(mrm_universal->clock_core.begin(),mrm_universal->clock_core.end());
 		for (int i=0;i<4;i++){
-			int log = mrm_universal->update(i,num_cores);
+			int log = mrm_universal->update(i,num_cores,mrm_delay);
 				
 		}
 
@@ -63,7 +66,7 @@ int main(int argc,char* argv[]){
 	while (numUpdated != 4){
 
 		for (int i=0;i<4;i++){
-			int log = mrm_universal->update(i,num_cores);
+			int log = mrm_universal->update(i,num_cores,mrm_delay);
 			mrm_universal->clock_core[i]++;
 			if (log == -1){
 				updatedBanks[i] = true;
@@ -82,9 +85,6 @@ int main(int argc,char* argv[]){
 		cores[i]->isCompleted = true;
 		mrm_universal->indexCompleted[i] = true;
 	}
-	for(int i=0;i<4;i++){
-		mrm_universal->update(i,num_cores);
-	}
 
 
 
@@ -97,7 +97,6 @@ int main(int argc,char* argv[]){
 
 	for(int i=0;i<4;i++){
 		if(mrm_universal->rowbuffer[i]!=-1){
-			// cout<<mrm_universal->writeBackCycle[i]<<"\n";
 			if (mrm_universal->writeBackCycle[i]+10>mrm_universal->max_cycle){
 				continue;
 			}
@@ -130,10 +129,8 @@ int main(int argc,char* argv[]){
 	cout<<"\nTotal Row Buffer Updates are: "<<total_row_buffer_updates<<"\n";
 	cout<<"MRM Delay is: "<<mrm_universal->MRM_Delay<<"\n";
 	cout<<"Total number of Instructions Executed:"<<mrm_universal->ins_executed<<"\n";
+	cout<<"Throughput: "<<((float)mrm_universal->ins_executed/(float)Max_cycles)<<"\n";
 return 0;
 
 
 }
-//Doubt
-//check_sw_lw return 0
-//forwarding line number
