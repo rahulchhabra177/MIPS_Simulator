@@ -132,7 +132,10 @@ int MRM::checkSafe_op(int r1,int r2,int r3,vector<int>banks,int index){
                         return -1;
                     }
                     else if (row[1]==r1){
-                        cout<<"core:"<<index<<" "<<"cycle no:"<<(clock_core[j]+1)<<" (MRM)LW process :"<<getIns(token_core[row[7]-1][row[3]])<<"removed from queue\n";
+                        // while (rCycles.find(clock_core[j])!=rCycles.end()){
+                            
+                        // }
+                        cout<</*"core:"<<index<<" "<<*/"cycle no:"<<(clock_core[j]+1)<<" (MRM)LW process :"<<getIns(token_core[row[7]-1][row[3]])<<"removed from queue\n";
                         MRM_Delay+=1;
                         rCycles.insert(clock_core[banks[j]]);
                         queue_op[banks[j]].erase(queue_op[banks[j]].begin()+i);
@@ -160,7 +163,7 @@ int MRM::checkSafe_addi(int r1,int r2,vector<int>banks,int index){
                     }
                     else if (row[1]==r1){
                         //mrm delay
-                        cout<<"core:"<<index<<" "<<"cycle no:"<<(clock_core[j]+1)<<"(MRM)LW process "<<getIns(token_core[row[7]-1][row[3]])<<"removed from queue\n";
+                        cout<</*"core:"<<index<<" "<<*/"cycle no:"<<(clock_core[j]+1)<<"(MRM)LW process "<<getIns(token_core[row[7]-1][row[3]])<<"removed from queue\n";
                         MRM_Delay+=1;
                         rCycles.insert(clock_core[banks[j]]);
                         queue_op[banks[j]].erase(queue_op[banks[j]].begin()+i);
@@ -198,7 +201,7 @@ void MRM::request_to_DRAM(int bankNum,int numCores){
     currBankSort = bankNum;
     sort(queue_op[bankNum].begin(),queue_op[bankNum].end(),[&](vector<int>a,vector<int>b){return sortVec(a,b);});
     if(queue_op[bankNum][0][4]==rowbuffer[bankNum]||rowbuffer[bankNum]==-1){
-        cout<<"core:"<<queue_op[bankNum][0][7]<<" cycle "<<(clock_core[bankNum]+1)<<" MRM:Request Sent to Dram on bank number: "<<bankNum<<"\n";
+        cout<</*"core:"<<queue_op[bankNum][0][7]<<*/"cycle "<<(clock_core[bankNum]+1)<<" MRM:Request Sent to Dram on bank number: "<<bankNum<<"\n";
         MRM_Delay+=1;
         rCycles.insert(clock_core[bankNum]);
 
@@ -256,7 +259,7 @@ void MRM::request_to_DRAM(int bankNum,int numCores){
     }else{
         vector<int>indexes = indx_in_bank(bankNum,numCores);
         if(indexes.size()<=1){
-            cout<<"core:"<<queue_op[bankNum][0][7]<<" cycle "<<(clock_core[bankNum]+1)<<" MRM:Request Sent to Dram on bank number: "<<bankNum<<"\n";
+            cout<</*"core:"<<queue_op[bankNum][0][7]<<*/"cycle "<<(clock_core[bankNum]+1)<<" MRM:Request Sent to Dram on bank number: "<<bankNum<<"\n";
             MRM_Delay+=1;
             rCycles.insert(clock_core[bankNum]);
             // clock_core[bankNum]+=1;
@@ -318,7 +321,7 @@ void MRM::request_to_DRAM(int bankNum,int numCores){
             }
             currBankSort = bankNum;
             sort(queue_op[bankNum].begin(),queue_op[bankNum].end(),[&](vector<int>a,vector<int>b){return sortVec(a,b);});
-            cout<<"core:"<<queue_op[bankNum][0][7]<<" cycle "<<(clock_core[bankNum]+1)<<" MRM:Request Sent to Dram on bank number: "<<bankNum<<"\n";
+            cout<</*"core:"<<queue_op[bankNum][0][7]<<*/"cycle "<<(clock_core[bankNum]+1)<<" MRM:Request Sent to Dram on bank number: "<<bankNum<<"\n";
             MRM_Delay+=1;
             rCycles.insert(clock_core[bankNum]);
             current[bankNum].reg0 = queue_op[bankNum][0][1];
@@ -379,7 +382,7 @@ void MRM::request_to_DRAM(int bankNum,int numCores){
 int MRM::update(int bankNum,int numCores)
 {
     if (current[bankNum].remaining_cycles==1){
-            cout<<"core:"<<current[bankNum].indx<<" cycle "<<(current[bankNum].startCycle+1)<<"-"<<(current[bankNum].startCycle + current[bankNum].waiting_cycle )<<(current[bankNum].isLW?":LW":":SW")<<" process completed on bank number "<<bankNum;
+            cout<<"core:"<<current[bankNum].indx<<"cycle "<<(current[bankNum].startCycle+1)<<"-"<<(current[bankNum].startCycle + current[bankNum].waiting_cycle )<<(current[bankNum].isLW?":LW":":SW")<<" process completed on bank number "<<bankNum;
             current[bankNum].remaining_cycles=0;
             LastDRAM_cycle[current[bankNum].indx] = current[bankNum].startCycle+current[bankNum].waiting_cycle;
             if (current[bankNum].isLW == 0){

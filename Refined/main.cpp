@@ -38,7 +38,7 @@ int main(int argc,char* argv[]){
 	int Cycle_complete=0;
 	vector<bool> updatedBanks(4,false);
 	while (num_cores!=num_completed && Cycle_complete<Max_cycles){
-
+// cout<<"\n";
 		for (int i=0;i<num_cores;i++){
 
 			if (!completed[i]){

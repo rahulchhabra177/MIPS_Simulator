@@ -989,10 +989,10 @@ void Core::parse(vector<vector<string>> tokens,map<string,int>labels){
                     else if (safe==-2){
                         vector<int> tmp = mrm->queue_op[banks[mrm->stored_value.second]][mrm->stored_value.first];
                         // cout<<getIns(tokens[lno])<<"\n";
-                        cout<<"core "<<index<<" cycle "<<(sequence_cycle+1)<<" Request sent to MRM "<<getIns(tokens[lineno])<<"\n";
-                        increment();
+                        // cout<<"core "<<index<<" cycle "<<(sequence_cycle+1)<<" Request sent to MRM "<<getIns(tokens[lineno])<<"\n";
+                        // increment();
                         mrm->regesterFile[index-1][reg1]=mrm->regesterFile[index-1][tmp[1]];
-                        cout<<"core:"<<index<<" "<<"cycle no:"<<(mrm->clock_core[mrm->stored_value.second]+1)<<":MRM Forwarding ";
+                        cout<<"core:"<<index<<" "<<"cycle no:"<<(mrm->clock_core[mrm->stored_value.second]+1)<<" Forwarding ";
                         cout<<"from sw process "<<getIns(tokens[tmp[3]])<<";"<<tokens[lineno][1]<<"="<<mrm->regesterFile[index-1][tmp[1]]<<"\n";
                         mrm->MRM_Delay+=1;
                         lineno++;
