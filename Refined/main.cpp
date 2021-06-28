@@ -5,41 +5,50 @@ using namespace std;
 
 
 
-int main(){
+int main(int argc,char* argv[]){
 
-	int num_cores=2;
+	int num_cores,rowdelay,coldelay,Max_cycles;
+	int total_row_buffer_updates = 0;
+	if(argc<2){
+		cerr<<"Error: Enter number of cores\n";
+		return 0;
+	}
+	num_cores = stoi(argv[1]);
+	Max_cycles = stoi(argv[2]);
+	if(argc<num_cores+5){
+		cerr<<"Error: Either the correct number of testcases aren't used or delay is not given\n";
+		return 0;
+	}
+	rowdelay = stoi(argv[3+num_cores]);
+	coldelay = stoi(argv[4+num_cores]);
 	int max_clock=0;
 	vector<Core*> cores(num_cores);
 	vector<int> cycles(num_cores);
-	MRM* mrm_universal=new MRM(10,2);
+	MRM* mrm_universal=new MRM(rowdelay,coldelay);
 	mrm_universal->rowbufferBank.resize(4);
 	for (int i=0;i<num_cores;i++){
-		cores[i]=new Core("./testcases/testcase"+to_string(i+1)+".txt",i+1,10,2,mrm_universal,num_cores);
+		string fileName = argv[i+3];
+		cores[i]=new Core(fileName,i+1,rowdelay,coldelay,mrm_universal,num_cores);
 	}
 
 	int num_completed=0;
 	vector<bool> completed(num_cores,false);
-	int debug=0;
+	int Cycle_complete=0;
 	vector<bool> updatedBanks(4,false);
-	while (num_cores!=num_completed && debug<10000){
+	while (num_cores!=num_completed && Cycle_complete<Max_cycles){
 
-		debug++;
 		for (int i=0;i<num_cores;i++){
 
 			if (!completed[i]){
 				cores[i]->parse_next();
-
-				//cout<<"comp "<<cores[i]->isCompleted<<"\n";
 				if (cores[i]->isCompleted){
-					// cout<<"core "<<i<<"\n";
 					completed[i]=true;
 					num_completed++;
 				}
 			}
 
-
 		}
-		
+		Cycle_complete = *max_element(mrm_universal->clock_core.begin(),mrm_universal->clock_core.end());
 		for (int i=0;i<4;i++){
 			int log = mrm_universal->update(i,num_cores);
 				
@@ -47,29 +56,32 @@ int main(){
 
 
 	}
-
+	
 	int numUpdated = 0;
 	while (numUpdated != 4){
 
 		for (int i=0;i<4;i++){
 			int log = mrm_universal->update(i,num_cores);
 			mrm_universal->clock_core[i]++;
-			// cout<<i<<"::"<<log<<"\n";
 			if (log == -1){
 				updatedBanks[i] = true;
 			}
 		}
 		numUpdated = 0;
-		// for (int i=0;i<4;i++){
-			// cout<<(updatedBanks[i]?"TRue ":"False ");
-		// }
 		for (int i=0;i<4;i++){
 			if (updatedBanks[i]){
 				numUpdated++;
 			}
 		}
-		// cout<<"num:"<<numUpdated<<"\n";
 
+
+	}
+	for(int i=0;i<num_cores;i++){
+		cores[i]->isCompleted = true;
+		mrm_universal->indexCompleted[i] = true;
+	}
+	for(int i=0;i<4;i++){
+		mrm_universal->update(i,num_cores);
 	}
 
 
@@ -80,18 +92,41 @@ int main(){
 			max_clock = mrm_universal->clock_core[i];
 		}
 	}
-//Writeback
+
 	for(int i=0;i<4;i++){
 		if(mrm_universal->rowbuffer[i]!=-1){
-			cout<<"Cycle "<<(max_clock+2)<<"-";
-			max_clock+=10;
+			cout<<"Cycle "<<(mrm_universal->writeBackCycle[i]+1)<<"-";
+			mrm_universal->writeBackCycle[i]+=10;
 			mrm_universal->rowbuffer[i] = -1;
-			cout<<(max_clock+1)<<" :DRAM Writeback rowbuffer number "<<i+1<<"\n";
+			cout<<(mrm_universal->writeBackCycle[i])<<" :DRAM Writeback rowbuffer number "<<i+1<<"\n";
 		}
 	}
 
+	vector<string> reg_name = {"$0","$1","$v0","$v1","$a0","$a1","$a2","$a3","$t0","$t1","$t2","$t3","$t4","$t5","$t6","$t7","$t8","$t9","$t10","$s1","$s2","$s3","$s4","$s5","$s6","$s7","$s8","$k1","$gp","$sp","$fp","$ra"};
+	
+	cout<<"\n";
+	for (int i=0;i<num_cores;i++){
+		cout<<" Core "<<i+1<<":\n";
+		cores[i]-> print_reg(mrm_universal->regesterFile[i]);
+		cout<<"\n";
+
+	}
+	cout<<"\n DRAM Memory at the end of the execution:\n";
+	for(auto i:mrm_universal->memoryupdate){
+		cout<<i.first<<" : "<<i.second<<endl;
+	}
+	cout<<"\n Row Buffer Updates of each Banks are\n";
+	for(int i=0;i<4;i++){
+		cout<<"Bank Number: "<<i+1<<" : Row Buffer Updates are: "<<mrm_universal->rowbufferUpdate[i]<<"\n";
+		total_row_buffer_updates+=mrm_universal->rowbufferUpdate[i];
+	}
+	cout<<"\nTotal Row Buffer Updates are: "<<total_row_buffer_updates<<"\n";
+	cout<<"MRM Delay is: "<<mrm_universal->MRM_Delay<<"\n";
 
 return 0;
 
 
 }
+//Doubt
+//check_sw_lw return 0
+//forwarding line number

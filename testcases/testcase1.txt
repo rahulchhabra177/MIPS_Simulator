@@ -1,11 +1,33 @@
-addi $t3 , $zero , 1000
-addi $t4 , $zero , 1000
-addi $t5 , $zero , 1000
-addi $s1 , $zero , 1000
-lw $t1 ,1000($s1)
-lw $s6 1000($s1)
-lw $s3 1000($s1)
-lw $s4 1000($s1)
-lw $s5 1000($s1)
-slt $t3 $t4 $s4
-slt $t3 $t4 2000
+main:
+	addi $s0, $zero, 1000
+    addi $s6,$zero,5000 
+	addi $s1, $zero, 0
+	addi $s2, $zero, 10
+	addi $t1, $zero, 0
+
+initloop: 
+	addi $t1, $t1, 1
+	sw $t1, 0($s0)
+    sw $t1,0($s6)
+	addi $s0, $s0, 4
+    sw $t1,16($s0)
+	addi $s1, $s1, 1
+	slt $s3, $s1, $s2
+	bne $s3, $zero, initloop
+
+	addi $s0, $zero, 1000
+	addi $s1, $zero, 0
+	addi $s3, $zero, 0
+	addi $s2, $zero, 9
+
+sumloop:
+	lw $t0, 0($s0)
+	addi $s0, $s0, 4
+	lw $t1, 0($s0)
+	add $t2, $t0, $t1
+	sw $t2, 0($s0)
+	addi $s1, $s1, 1
+	slt $s3, $s1, $s2
+	bne $s3, $zero, sumloop
+
+exit:
