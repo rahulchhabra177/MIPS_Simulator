@@ -18,11 +18,16 @@ class Core{
 		int lineno = 0;
 		int ins_size;
 		vector<int>banks;
+		string encode(string reg);
+		void encode_memory(vector<vector<string>>instructions);
+		string encode_ins(vector<string>arguments);
 		vector<vector<string>> instruction_memory;
+		vector<string> encoded_memory;
 		map<string,int>labels;
 		Core(string filename ,int idx, int rDelay , int cDelay , MRM* mrm,int total_cores);
         void print_reg(vector<int> regesterFile);
 		vector<int> queueBank(int index);
+		string getIns(vector<string>t);
         int convertRegisters(string s);
         int getBankNum(int address);
         int addressnew(string s);

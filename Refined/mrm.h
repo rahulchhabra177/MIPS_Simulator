@@ -19,6 +19,10 @@ class MRM{
     	vector<vector<int>>queue_op[4];
     	vector<vector<int>> regesterFile;
 		vector<int>LastDRAM_cycle;
+		vector<bool> doWriteBack;
+		unordered_set<int> rCycles;
+		int ins_executed = 0;
+		int max_cycle;
     	MRM(int rDelay,int cDelay);
     	int Mem_Req_Order(int rowbuffer,vector<vector<int>>current_queue_op,vector<int> current_op,int lineno, int size, int safe);
 		bool sortVec(const vector<int>& a,const vector<int>& b);
@@ -26,7 +30,7 @@ class MRM{
 		int checkSafe_addi(int r1,int r2,vector<int>banks,int index);
 		int check_beq_bne(int r1,int r2,vector<int>banks,int index);
 		vector<vector<vector<string>>>token_core;
-		int stored_value=-1;
+		pair<int,int> stored_value={-1,-1};
 		vector<int>notSafeRow;
 		int currBank = 0;
 		int currBankSort = -1;

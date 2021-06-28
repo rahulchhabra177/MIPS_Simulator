@@ -15,6 +15,7 @@ int main(int argc,char* argv[]){
 	}
 	num_cores = stoi(argv[1]);
 	Max_cycles = stoi(argv[2]);
+
 	if(argc<num_cores+5){
 		cerr<<"Error: Either the correct number of testcases aren't used or delay is not given\n";
 		return 0;
@@ -25,6 +26,7 @@ int main(int argc,char* argv[]){
 	vector<Core*> cores(num_cores);
 	vector<int> cycles(num_cores);
 	MRM* mrm_universal=new MRM(rowdelay,coldelay);
+	mrm_universal->max_cycle = Max_cycles;
 	mrm_universal->rowbufferBank.resize(4);
 	for (int i=0;i<num_cores;i++){
 		string fileName = argv[i+3];
@@ -95,8 +97,13 @@ int main(int argc,char* argv[]){
 
 	for(int i=0;i<4;i++){
 		if(mrm_universal->rowbuffer[i]!=-1){
+			// cout<<mrm_universal->writeBackCycle[i]<<"\n";
+			if (mrm_universal->writeBackCycle[i]+10>mrm_universal->max_cycle){
+				continue;
+			}
 			cout<<"Cycle "<<(mrm_universal->writeBackCycle[i]+1)<<"-";
 			mrm_universal->writeBackCycle[i]+=10;
+
 			mrm_universal->rowbuffer[i] = -1;
 			cout<<(mrm_universal->writeBackCycle[i])<<" :DRAM Writeback rowbuffer number "<<i+1<<"\n";
 		}
@@ -122,7 +129,7 @@ int main(int argc,char* argv[]){
 	}
 	cout<<"\nTotal Row Buffer Updates are: "<<total_row_buffer_updates<<"\n";
 	cout<<"MRM Delay is: "<<mrm_universal->MRM_Delay<<"\n";
-
+	cout<<"Total number of Instructions Executed:"<<mrm_universal->ins_executed<<"\n";
 return 0;
 
 
