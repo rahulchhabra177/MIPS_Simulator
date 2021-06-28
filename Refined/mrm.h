@@ -29,6 +29,7 @@ class MRM{
 		int stored_value=-1;
 		vector<int>notSafeRow;
 		int currBank = 0;
+		int currBankSort = -1;
 		int update(int bankNum,int numCores);
 		int check_sw_lw(int r1,int r2,int address,int cur_ins,vector<int>banks,int index);
 		map<string,int>memoryupdate;
@@ -40,12 +41,15 @@ class MRM{
 		vector<int> clock_core;
 		int safe=0;
 		vector<int> rowbufferUpdate;
-		int rowdelay,coldelay,priority_row1=-1,priority_row2=-1,priority_num = -1;	
+		int rowdelay,coldelay;	
 		vector<bool> prev_row_changed;	
 		void request_to_DRAM(int bankNum,int numCores);
 		vector<int> getBanks(int index,int numCores);
 		void setClockCore(int index, int totalCores,int bankNum);
 		int iNum = 0;
+		int MRM_Delay;
 		vector<int>indx_in_bank(int bankNum,int numCores);
 		vector<bool>indexCompleted;
+		vector<int>priority_row1,priority_row2,priority_num;
+		vector<int>writeBackCycle;
 };
