@@ -24,4 +24,4 @@ main:
 
 
 exit:
-	addi $zero $zero 1000
+addi $zero $zero 1000
