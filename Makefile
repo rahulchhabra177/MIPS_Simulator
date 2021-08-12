@@ -1,4 +1,4 @@
-OBJS = ./Refined/main.cpp ./Refined/core.cpp ./Refined/mrm.cpp 
+OBJS = ./code/main.cpp ./code/core.cpp ./code/mrm.cpp 
 CC = g++
 OBJ_NAME = main
 all : $(OBJS)
